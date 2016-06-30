@@ -41,22 +41,22 @@ namespace Cut
             masterPageItems.Add(new MasterPageItem
             {
                 Title = "新增資料",
-                TargetType = typeof(HomePage)
+                TargetType = typeof(AddVocPage)
             });
             masterPageItems.Add(new MasterPageItem
             {
                 Title = "我的最愛",
-                TargetType = typeof(HomePage)
+                TargetType = typeof(FavoritePage)
             });
             masterPageItems.Add(new MasterPageItem
             {
                 Title = "單字測驗",
-                TargetType = typeof(HomePage)
+                TargetType = typeof(TestPage)
             });
             masterPageItems.Add(new MasterPageItem
             {
                 Title = "設定",
-                TargetType = typeof(HomePage)
+                TargetType = typeof(SettingPage)
             });
             listView = new ListView
             {

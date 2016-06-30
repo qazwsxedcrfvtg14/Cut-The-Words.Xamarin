@@ -31,6 +31,7 @@ namespace Cut
         internal ScrollView
             note_view = new ScrollView();
         internal Tuple<string, List<int>> wds;
+        internal Label tivoc= new Label();
         Grid grid = new Grid
             {
                 VerticalOptions = LayoutOptions.FillAndExpand,
@@ -49,9 +50,10 @@ namespace Cut
                 },
             };
         Label kk = new Label();
-        string media_uri;
+        string media_uri,_voc;
         internal void Init(string data,bool first=true)
         {
+            tivoc.Text = data;
             wds = Voc.GetExp(Voc.words.val(data));
             expst.Content = Voc.ExpStack(wds.Item1);
             if (first)
@@ -73,6 +75,9 @@ namespace Cut
                         s = s.Substring(pos + 1);
                     }
                     media_uri = s;
+                    ToolbarItems[4].Icon = "volume.png";
+                    if (Voc.setting["auto_play"] == "On")
+                        DependencyService.Get<IAudio>().PlayMp3File(media_uri);
                 };
                 this.Appearing += async (sender, e) =>
                 {
@@ -153,9 +158,9 @@ namespace Cut
                 id++;
             }
             if (Voc.favorite.exists(data))
-                ToolbarItems[0].Icon = "hamburger.png";
+                ToolbarItems[0].Icon = "unfavorite.png";
             else
-                ToolbarItems[0].Icon = "contacts.png";
+                ToolbarItems[0].Icon = "favorite.png";
             string _voc = data, _exp = Voc.GetExpSimple(Voc.words.val(_voc));
 
             var task = Task.Run(() =>
@@ -290,7 +295,7 @@ namespace Cut
         private void Tb_tgr_Tapped(object sender, EventArgs e)
         {
             var tb = new Entry {
-                Text = Voc.note.exists(Title) ? Voc.note.val(Title) : "",
+                Text = Voc.note.exists(_voc) ? Voc.note.val(_voc) : "",
                 Margin = 20,
                 //FontSize = 18,
             };
@@ -301,17 +306,17 @@ namespace Cut
         private void Tb_Unfocused(object sender, FocusEventArgs e)
         {
             var tmp = note_view.Content as Entry;
-            if (tmp.Text != Voc.note.val(Title))
-                Voc.note.add(Title, tmp.Text);
-            else if (tmp.Text==""&&Voc.note.exists(Title))
-                Voc.note.remove(Title);
+            if (tmp.Text != Voc.note.val(_voc))
+                Voc.note.add(_voc, tmp.Text);
+            else if (tmp.Text==""&&Voc.note.exists(_voc))
+                Voc.note.remove(_voc);
             var tb = new Label
             {
                 Margin = 10,
                 //FontSize=18,
             };
-            if (Voc.note.exists(Title))
-                tb.Text = Voc.note.val(Title);
+            if (Voc.note.exists(_voc))
+                tb.Text = Voc.note.val(_voc);
             else
                 tb.Text = "備註(點擊修改)";
             var tb_tgr = new TapGestureRecognizer();
@@ -329,7 +334,7 @@ namespace Cut
                 if (voc_croot.Children[i] == senderComboBox)
                 {
                     wds.Item2[i] = senderComboBox.SelectedIndex;
-                    Voc.words.add(Title,Voc.MakeExp(wds));
+                    Voc.words.add(_voc,Voc.MakeExp(wds));
                     break;
                 }
         }
@@ -341,7 +346,7 @@ namespace Cut
             for (int i = 0; i < voc_root.Children.Count; i++)
                 if (voc_root.Children[i] == senderTextBlock)
                 {
-                    var s = Voc.Show2(Title)[i];
+                    var s = Voc.Show2(_voc)[i];
                     if (s[0] != '-' && s[s.Length - 1] != '-')
                     {
                         s = Voc.WordRotToExp(s).Item2;
@@ -359,24 +364,24 @@ namespace Cut
         }
         public SingleVocPage(string param)
         {
-            param.ToLower();
+            //param.ToLower();
             param = param.Trim();
             //NavigationPage.SetHasNavigationBar(this, false);
             ToolbarItems.Add(new ToolbarItem
             {
-                Icon = "hamburger.png",
+                Icon = "favorite.png",
                 Text = "最愛",
                 Command = new Command(() => {
-                    if (Voc.favorite.exists(Title))
-                        Voc.favorite.remove(Title);
+                    if (Voc.favorite.exists(_voc))
+                        Voc.favorite.remove(_voc);
                     else
-                        Voc.favorite.add(Title, "");
-                    Init(Title, false);
+                        Voc.favorite.add(_voc, "");
+                    Init(_voc, false);
                 })
             });
             ToolbarItems.Add(new ToolbarItem
             {
-                Icon = "contacts.png",
+                Icon = "refresh.png",
                 Text = "重整",
                 Command = new Command(async() => {
                     await Refresh();
@@ -384,7 +389,7 @@ namespace Cut
             });
             ToolbarItems.Add(new ToolbarItem
             {
-                Icon = "todo.png",
+                Icon = "edit.png",
                 Text = "修改",
                 Command = new Command(async () => {
                     var page = new MyPopupPage(this);
@@ -394,52 +399,75 @@ namespace Cut
             });
             ToolbarItems.Add(new ToolbarItem
             {
-                Icon = "reminders.png",
+                Icon = "delete.png",
                 Text = "刪除",
                 Command = new Command(async () =>
                 {
                     var answer = await DisplayAlert("刪除", "真的要刪除嗎?", "是", "否");
                     if (answer == true)
                     {
-                        Voc.words.remove(Title);
+                        Voc.words.remove(_voc);
                         await Navigation.PopAsync();
                     }
                 })
             });
             ToolbarItems.Add(new ToolbarItem
             {
-                Icon = "todo.png",
+                Icon = "mute.png",
                 Text = "發音",
                 Command = new Command(() => { if (media_uri != null) DependencyService.Get<IAudio>().PlayMp3File(media_uri); })
 
             });
             Content = new ScrollView { Orientation = ScrollOrientation.Vertical, Content = grid, Margin = new Thickness(10, 10, 10, 5) };
-            grid.Children.Add(kk, 0, 0);
-            grid.Children.Add(expst, 0, 1);
-            grid.Children.Add(new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = voc_root }, 0, 2);
-            grid.Children.Add(new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = voc_croot }, 0, 3);
-            grid.Children.Add(note_view, 0, 4);
-            grid.Children.Add(alias_list, 0, 5);
-            grid.Children.Add(new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = pics }, 0, 6);
-            grid.Children.Add(VocList, 0, 7);
+            grid.Children.Add(tivoc, 0, 0);
+            grid.Children.Add(kk, 0, 1);
+            grid.Children.Add(expst, 0, 2);
+            grid.Children.Add(new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = voc_root }, 0, 3);
+            grid.Children.Add(new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = voc_croot }, 0, 4);
+            grid.Children.Add(note_view, 0, 5);
+            grid.Children.Add(alias_list, 0, 6);
+            grid.Children.Add(new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = pics }, 0, 7);
+            grid.Children.Add(VocList, 0, 8);
             if (Voc.words.exists(param))
             {
-                if (Title != null)
+                if (_voc != null)
                     Init(param, false);
                 else
                 {
-                    Title = param;
+                    _voc = param;
                     Init(param);
                 }
             }
             else
             {
-                Title = param;
-                this.Appearing += async (s,e)=> { await Refresh(); };
+                _voc = param;
+                this.Appearing += async (s,e)=> { await Refresh(true); };
             }
         }
-        async Task Refresh() {
-            var web = await Voc.GetAsync("http://cn.bing.com/dict/search?mkt=zh-cn&q=" + Title);
+        async Task Refresh(bool first=false) {
+            var web = await Voc.GetAsync("http://cn.bing.com/dict/search?mkt=zh-cn&q=" + _voc);
+            if (web == null || web=="") {
+                await DisplayAlert("錯誤", "網路錯誤", "了解");
+                return;
+            }
+            string npa = _voc;
+            var pb = web.IndexOf("<h1><strong>");
+            if (pb != -1)
+            {
+                var tit = web.Substring(pb + 12);
+                var pe = tit.IndexOf("<");
+                if (pe != -1)
+                {
+                    npa = tit.Substring(0, pe);
+                    if (npa.ToLower()!=_voc.ToLower()) npa = _voc;
+                    if (npa != _voc)
+                    {
+                        Voc.note.remove(_voc);
+                        Voc.words.remove(_voc);
+                        _voc = npa;
+                    }
+                }
+            }
             string disc = "", nt = "";
             var betip = web.IndexOf("<div class=\"in_tip\">");
             if (betip != -1)
@@ -516,10 +544,10 @@ namespace Cut
                 return;
             }
             disc = Voc.s2t(disc2);
-            Voc.words.add(Title, disc);
+            Voc.words.add(_voc, disc);
             if (nt != "")
-                Voc.note.add(Title, Voc.s2t(nt));
-            Init(Title);
+                Voc.note.add(_voc, Voc.s2t(nt));
+            Init(_voc,first);
         }
         public class MyPopupPage : PopupPage
         {
@@ -536,7 +564,7 @@ namespace Cut
                     if (nf) input1.Text += " "; nf = true;
                     input1.Text += (page.voc_root.Children[i] as Label).Text;
                 }
-                input2.Text = Voc.GetExpSimpleOrg(Voc.words.val(page.Title));
+                input2.Text = Voc.GetExpSimpleOrg(Voc.words.val(page._voc));
                 var st = new StackLayout
                 {
                     VerticalOptions = LayoutOptions.Center,
@@ -550,7 +578,7 @@ namespace Cut
                             new Button {
                                 Text ="確認",
                                 Command = new Command(async()=> {
-                                    string a=page.Title, b=input1.Text, c="";
+                                    string a=page._voc, b=input1.Text, c="";
                                     var tmp=b.Split(' ');
                                     foreach(var x in tmp)
                                         c+=x;
@@ -559,7 +587,7 @@ namespace Cut
                                         return;
                                     }
                                     Voc.words.add_ok(a,b);
-                                    page.Init(page.Title,false);
+                                    page.Init(page._voc,false);
                                     await PopupNavigation.PopAsync();
                                 }),
                             }
@@ -572,7 +600,7 @@ namespace Cut
                             new Button {
                                 Text ="確認",
                                 Command = new Command(async()=> {
-                                    string a=page.Title, b="",c=input2.Text;
+                                    string a=page._voc, b="",c=input2.Text;
                                     foreach (var x in c)
                                         if (x == ',')
                                             b += "，";
@@ -581,7 +609,7 @@ namespace Cut
                                     page.wds=Tuple.Create(b,page.wds.Item2);
                                     Voc.words.add(a,Voc.MakeExp(page.wds));
                                     b = Voc.GetExpSimple(Voc.words.val(a));
-                                    page.Init(page.Title,false);
+                                    page.Init(page._voc,false);
                                     await PopupNavigation.PopAsync();
                                 }),
                             }

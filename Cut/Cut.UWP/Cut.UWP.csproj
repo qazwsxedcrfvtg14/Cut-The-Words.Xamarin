@@ -110,8 +110,15 @@
     <None Include="Windows_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="bookmark.png" />
     <Content Include="contacts.png" />
+    <Content Include="delete.png" />
+    <Content Include="edit.png" />
+    <Content Include="favorite.png" />
     <Content Include="hamburger.png" />
+    <Content Include="list.png" />
+    <Content Include="mute.png" />
+    <Content Include="next.png" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -120,8 +127,11 @@
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="refresh.png" />
     <Content Include="reminders.png" />
     <Content Include="todo.png" />
+    <Content Include="unfavorite.png" />
+    <Content Include="volume.png" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">

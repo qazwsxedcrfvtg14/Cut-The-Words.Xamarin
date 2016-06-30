@@ -9,7 +9,10 @@ namespace Cut
     public class MainPage : MasterDetailPage
     {
         MasterPage masterPage;
-
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+        }
         public MainPage()
         {
             Navigation.PushModalAsync(new MainLoadingPage());

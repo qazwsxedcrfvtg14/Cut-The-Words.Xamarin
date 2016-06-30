@@ -13,8 +13,14 @@ namespace Cut
 {
     public static class Voc
     {
-        public static Maps words = new Maps(), root = new Maps(), prefix = new Maps(), suffix = new Maps(),note = new Maps();
-        public static Maps setting = new Maps(), favorite = new Maps();
+        public static Maps 
+            words = new Maps(), 
+            root = new Maps(), 
+            prefix = new Maps(), 
+            suffix = new Maps(),
+            note = new Maps(),
+            setting = new Maps(), 
+            favorite = new Maps();
         public static SortedDictionary<string, SortedSet<string>> rtp=null;
         public static async Task DumpAppFileAsync(string fil)
         {
@@ -27,7 +33,18 @@ namespace Cut
                 await fileService.SaveTextAsync(fil, reader.ReadToEnd());
             }
         }
-        public static async Task<Maps> GetDocAsync(string inp,bool user=false){
+        public static async Task SavingSetting()
+        {
+            return;
+            /*
+            string ot="";
+            foreach (var x in setting.data)
+		        ot += x.Key + "," + x.Value + "\n";
+            var fileService = DependencyService.Get<ISaveAndLoad>();
+            await fileService.SaveTextAsync("setting.txt",ot);
+            */
+        }
+        public static async Task<Maps> GetDocAsync(string inp,bool user=true){
             Maps data=new Maps();
             data.clear();
             var fileService = DependencyService.Get<ISaveAndLoad>();
@@ -86,29 +103,88 @@ namespace Cut
                 data.file_name = inp + ".txt";
             return data;
         }
-        public static List<string> match(string match, string beg = "")
+        public static List<string> match(string match, int beg = 0,string st="")
         {
             List<string> ve = new List<string>();
             ve.Clear();
             string reg_string = "";
+            string lb="",ub="";
+            bool noteng=false;
+            if (match.Length != 0 && match[0] == '^') {
+                noteng = true;
+                match = match.Substring(1);
+            }
+            bool tg = true;
             for (int i = 0; i < match.Length; i++)
             {
                 if (match[i] == '*')
-                    reg_string += ".*";
-                else if (match[i] == '?')
-                    reg_string += ".";
-                else
-                    reg_string += match[i];
-            }
-            Regex reg = new Regex(reg_string, RegexOptions.IgnoreCase);
-            int cnt = 0;
-            foreach (var x in words.data)
-            {
-                var tmp = reg.Matches(x.Key);
-                if (tmp.Count != 0)
                 {
-                    ve.Add(x.Key);
-                    if (++cnt == 30) break;
+                    reg_string += ".*";
+                    ub += (char)0xEFFF;
+                    tg = false;
+                }
+                else if (match[i] == '?')
+                {
+                    reg_string += ".";
+                    if(tg)lb += (char)0;
+                    ub += (char)0xEFFF;
+                }
+                else if ((match[i] == '[' || match[i] == ']' || match[i] == '.'))
+                {
+                    reg_string += "\\" + match[i];
+                    if (tg) lb += match[i];
+                    ub += match[i];
+                }
+                else if (match[i] >= 0 && match[i] <= 128)
+                {
+                    reg_string += match[i];
+                    if (tg) lb += match[i];
+                    ub += match[i];
+                }
+                else
+                {
+                    noteng = true;
+                    reg_string += match[i];
+                }
+            }
+            Regex reg = new Regex("^"+reg_string, RegexOptions.IgnoreCase);
+            Regex reg2 = new Regex("^.*" + reg_string + ".*");
+            int cnt = 0;
+            if (noteng)
+            {
+                foreach (var x in words.data)
+                {
+                    if (reg.IsMatch(x.Key))
+                    {
+                        if (cnt >= beg)
+                            ve.Add(x.Key);
+                        if ((++cnt) - beg == 30) break;
+                    }
+                    else if (noteng && reg2.IsMatch(x.Value))
+                    {
+                        if (cnt >= beg)
+                            ve.Add(x.Key);
+                        if ((++cnt) - beg == 30) break;
+                    }
+                }
+            }
+            else
+            {
+                var be = words.data.lower_bound(lb);
+                var ed = words.data.upper_bound(ub);
+                if (st != "")
+                {
+                    be = words.data.upper_bound(st);
+                    beg = 0;
+                }
+                while (be != ed) {
+                    if (reg.IsMatch(be.val.Key))
+                    {
+                        if (cnt >= beg)
+                            ve.Add(be.val.Key);
+                        if ((++cnt) - beg == 30) break;
+                    }
+                    be = be.next();
                 }
             }
             return ve;
@@ -125,7 +201,7 @@ namespace Cut
                 else
                     reg_string += match[i];
             }
-            Regex reg = new Regex(reg_string, RegexOptions.IgnoreCase);
+            Regex reg = new Regex("^"+reg_string, RegexOptions.IgnoreCase);
             List<string> ve = new List<string>();
             int cnt = 0;
             foreach (var x in prefix.data)
@@ -171,7 +247,7 @@ namespace Cut
         {
             s = s.Trim();
             int len = s.Length;
-            s.ToLower();
+            //s.ToLower();
             bool sp = false;
             for (int i = 0; i < len; i++)
                 if ((s[i] < 'A' || s[i] > 'Z') && (s[i] < 'a' || s[i] > 'z')) {
@@ -249,7 +325,7 @@ namespace Cut
                 for (int i = 0; i < len; i++)
                     for (int j = i; j < len; j++) {
                         string now = s.Substring(i, j - i + 1);
-                        dp[i, j] = j - i;
+                        dp[i, j] = j - i - 1;
                         dps[i, j] = now;
                         if (i == 0 && j == len - 1)
                         {
@@ -289,12 +365,20 @@ namespace Cut
                                 dps[i, j] = now;
                             }
                         }
-                        if ((i != 0 || j != len - 2) && j - i > 3 && words.exists(now + "e"))
+                        if ((i != 0 || j != len - 2) && (j - i >= 3 || (j - i == 2 && (j == len - 1 || i == 0))) && words.exists(now + "e"))
                         {
                             int score = (j - i) * 2 - 1;
                             if (dp[i, j] < score) {
                                 dp[i, j] = score;
                                 dps[i, j] = now;
+                            }
+                        }
+                        if ((i != 0 || j != len - 1) && (j - i >= 3 || (j - i == 2 && (j == len - 1 || i == 0))) && now[now.Length-1] == 'i' && words.exists(now.Substring(0, now.Length - 1) + "y"))
+                        {
+                            int score = (j - i) * 2 - 1;
+                            if (dp[i, j] < score) {
+                                dp[i, j] = score;
+                                dps[i,j] = now;
                             }
                         }
                     }
@@ -351,10 +435,13 @@ namespace Cut
         }
         public static Tuple<string, string> WordRotToExp(string now)
         {
+            string nw= now.Substring(0, now.Length - 1) + "y";
             if (words.exists(now))
                 return (Tuple.Create(words.val(now), now));
             else if (now.Length > 2 && words.exists(now + "e"))
                 return (Tuple.Create(words.val(now + "e"), now + "e"));
+            else if (now.Length > 2 && now[now.Length-1] == 'i' && words.exists(nw))
+		        return (Tuple.Create(words.val(nw), nw));
             else
                 return (Tuple.Create(now, now));
         }
@@ -686,6 +773,36 @@ namespace Cut
                     ret += s[i];
             }
             return ret;
+        }
+
+        public static int LevenshteinDistance(string s, string t)
+        {
+            if (s == t) return 0;
+            int n = s.Length, m = t.Length;
+            if (n == 0) return m;
+            if (m == 0) return n;
+
+            // create two work vectors of integer distances
+
+            int[] v0 = new int[m + 1];
+            int[] v1 = new int[m + 1];
+            
+            for (int i = 0; i <= m; i++)
+                v0[i] = i;
+
+            for (int i = 0; i < n; i++)
+            {
+                v1[0] = i + 1;
+                for (int j = 0; j < m; j++)
+                {
+                    int cost = (s[i] == t[j]) ? 0 : 1;
+                    v1[j + 1] = Math.Min(Math.Min(v1[j] + 1, v0[j + 1] + 1), v0[j] + cost);
+                }
+                for (int j = 0; j <= m; j++)
+                    v0[j] = v1[j];
+            }
+
+            return v1[m];
         }
     }
 }

@@ -227,7 +227,9 @@ Global
 		{397FE5B4-91FA-4C96-BEDE-2C94D65E4D97}.Release|ARM.Deploy.0 = Release|ARM
 		{397FE5B4-91FA-4C96-BEDE-2C94D65E4D97}.Release|iPhone.ActiveCfg = Release|x86
 		{397FE5B4-91FA-4C96-BEDE-2C94D65E4D97}.Release|iPhoneSimulator.ActiveCfg = Release|x86
-		{397FE5B4-91FA-4C96-BEDE-2C94D65E4D97}.Release|Mixed Platform.ActiveCfg = Release|x86
+		{397FE5B4-91FA-4C96-BEDE-2C94D65E4D97}.Release|Mixed Platform.ActiveCfg = Release|x64
+		{397FE5B4-91FA-4C96-BEDE-2C94D65E4D97}.Release|Mixed Platform.Build.0 = Release|x64
+		{397FE5B4-91FA-4C96-BEDE-2C94D65E4D97}.Release|Mixed Platform.Deploy.0 = Release|x64
 		{397FE5B4-91FA-4C96-BEDE-2C94D65E4D97}.Release|x64.ActiveCfg = Release|x64
 		{397FE5B4-91FA-4C96-BEDE-2C94D65E4D97}.Release|x64.Build.0 = Release|x64
 		{397FE5B4-91FA-4C96-BEDE-2C94D65E4D97}.Release|x64.Deploy.0 = Release|x64

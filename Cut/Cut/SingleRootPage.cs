@@ -38,7 +38,7 @@ namespace Cut
         string _voc, _exp;
         public SingleRootPage(string param)
         {
-            param.ToLower();
+            //param.ToLower();
             param = param.Trim();
             //NavigationPage.SetHasNavigationBar(this, false);
             ToolbarItems.Add(new ToolbarItem

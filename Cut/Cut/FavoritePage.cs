@@ -7,10 +7,11 @@ using System.Reflection;
 using System.Collections;
 using System.Collections.ObjectModel;
 using Xamarin.Forms;
+using System.Threading.Tasks;
 
 namespace Cut
 {
-    public class SearchRootPage : ContentPage
+    public class FavoritePage : ContentPage
     {
         public class stcell : ViewCell
         {
@@ -63,11 +64,9 @@ namespace Cut
         }
         ListView VocList;
         ObservableCollection<wod> VocList_Items;
-        SearchBar input_voc;
-        public SearchRootPage()
+        public FavoritePage()
         {
-            Title = "部首查詢";
-            input_voc = new SearchBar();
+            Title = "我的最愛";
             VocList = new ListView();
             VocList_Items = new ObservableCollection<wod>();
             VocList.ItemsSource = VocList_Items;
@@ -75,35 +74,21 @@ namespace Cut
             customCell.SetBinding(stcell.vocProperty, "voc");
             customCell.SetBinding(stcell.expProperty, "exp");
             VocList.ItemTemplate = customCell;
-            VocList.ItemSelected += Lis_ItemSelected;
+            VocList.ItemSelected += VocList_ItemSelected; ;
             VocList.HasUnevenRows = true;
-            input_voc.TextChanged += (sender, args)=>{
-                VocList_Items.Clear();
-                foreach (var voc in Voc.match_rot(input_voc.Text + "*"))
-                    VocList_Items.Add(new wod(voc, Voc.GetRootExp(voc)));
-            };
-            /*input_voc.SearchButtonPressed += async (sender, args) => {
-                if (input_voc.Text == "") return;
-                await Navigation.PushAsync(new SingleVocPage(input_voc.Text));
-            };*/
             VocList_Items.Clear();
-            foreach (var voc in Voc.match_rot(input_voc.Text + "*"))
-                VocList_Items.Add(new wod(voc, Voc.GetRootExp(voc)));
-            Content = new StackLayout
-            {
-                Children = {
-                    input_voc,
-                    VocList
-                }
-            };
+            foreach (var voc in Voc.favorite.data)
+                if(Voc.words.exists(voc.Key))
+                    VocList_Items.Add(new wod(voc.Key, Voc.GetExpSimple(Voc.words.val(voc.Key))));
+            Content = VocList;
         }
 
-        private async void Lis_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+        private async void VocList_ItemSelected(object sender, SelectedItemChangedEventArgs e)
         {
             var item = (e.SelectedItem as wod);
             if (item != null)
             {
-                await Navigation.PushAsync(new SingleRootPage(item.voc));
+                await Navigation.PushAsync(new SingleVocPage(item.voc));
                 VocList.SelectedItem = null;
             }
         }
