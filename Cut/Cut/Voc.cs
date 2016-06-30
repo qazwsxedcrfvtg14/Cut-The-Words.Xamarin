@@ -35,14 +35,11 @@ namespace Cut
         }
         public static async Task SavingSetting()
         {
-            return;
-            /*
             string ot="";
             foreach (var x in setting.data)
 		        ot += x.Key + "," + x.Value + "\n";
             var fileService = DependencyService.Get<ISaveAndLoad>();
             await fileService.SaveTextAsync("setting.txt",ot);
-            */
         }
         public static async Task<Maps> GetDocAsync(string inp,bool user=true){
             Maps data=new Maps();

@@ -30,6 +30,7 @@ namespace Cut
             });
             Content = progressBar;
             var task = Task.Run(async() => {
+                int data_version = 1;
                 IProgress<int> pr = progress;
                 pr.Report(3);
 
@@ -65,25 +66,27 @@ namespace Cut
                 Voc.favorite = await Voc.GetDocAsync("favorite", false);
                 pr.Report(40);
 
-                if (!fileService.FileExists("words.txt"))
+                if (!fileService.FileExists("words.txt") || int.Parse(Voc.setting["data_version"]) < data_version)
                     await Voc.DumpAppFileAsync("words.txt");
                 pr.Report(50);
 
-                if (!fileService.FileExists("root.txt"))
+                if (!fileService.FileExists("root.txt") || int.Parse(Voc.setting["data_version"]) < data_version)
                     await Voc.DumpAppFileAsync("root.txt");
                 pr.Report(55);
 
-                if (!fileService.FileExists("prefix.txt"))
+                if (!fileService.FileExists("prefix.txt") || int.Parse(Voc.setting["data_version"]) < data_version)
                     await Voc.DumpAppFileAsync("prefix.txt");
                 pr.Report(60);
 
-                if (!fileService.FileExists("suffix.txt"))
+                if (!fileService.FileExists("suffix.txt") || int.Parse(Voc.setting["data_version"]) < data_version)
                     await Voc.DumpAppFileAsync("suffix.txt");
                 pr.Report(65);
 
-                if (!fileService.FileExists("note.txt"))
+                if (!fileService.FileExists("note.txt")|| int.Parse(Voc.setting["data_version"]) < data_version)
                     await Voc.DumpAppFileAsync("note.txt");
                 pr.Report(70);
+                if (int.Parse(Voc.setting["data_version"]) < data_version)
+                    Voc.setting["data_version"] = data_version.ToString();
 
                 Voc.words = await Voc.GetDocAsync("words", true);
                 pr.Report(80);

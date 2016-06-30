@@ -31,14 +31,20 @@ namespace Cut
                 ColumnDefinitions = {
                     new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) },
                     new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
-                }
+                },
+                RowDefinitions = {
+                    new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) },
+                },
+                Padding = 5
             };
-            grid.Children.Add(new Label { Text = "更新伺服器位置：" }, 0, 0);
+            grid.Children.Add(new Label { Text = "更新伺服器位置：",VerticalOptions= LayoutOptions.Center }, 0, 0);
             host_name.TextChanged += Host_name_TextChanged;
-            grid.Children.Add(host_name, 0, 1);
+            host_name.Text = Voc.setting["website"];
+            grid.Children.Add(host_name, 1,0);
             st.Children.Add(grid);
             st.Children.Add(new Label { Text = "(伺服器位置留空後，重開應用程式會回復預設值)" });
             set_list.ItemSelected += Set_list_ItemSelected;
+            set_list.ItemsSource = set_list_items;
             st.Children.Add(set_list);
             Content = st;
         }
@@ -56,6 +62,7 @@ namespace Cut
             if (str == "重置應用程式")
             {
                 //if (rtp==nullptr) { ShowMsg("應用程式初始化中，請稍後重試。"); return; }
+                var task=DisplayAlert("請等一下", "讀取中，請稍後", "了解");
                 await fileService.SaveTextAsync("setting.txt", "");
                 await fileService.SaveTextAsync("favorite.txt", "");
                 await Voc.DumpAppFileAsync("words.txt");
@@ -77,25 +84,28 @@ namespace Cut
                 Voc.root = await Voc.GetDocAsync("root.txt");
                 if (!Voc.setting.exists("website"))
                     Voc.setting.add("website", "http://joe59491.azurewebsites.net");
-                if (!Voc.setting.exists("sound_ur"))
-                    Voc.setting.add("sound_ur", "http://dictionary.reference.com/browse/");
+                if (!Voc.setting.exists("sound_url"))
+                    Voc.setting.add("sound_url", "http://dictionary.reference.com/browse/");
                 if (!Voc.setting.exists("sound_url2"))
                     Voc.setting.add("sound_url2", "http://static.sfdict.com/staticrep/dictaudio");
                 if (!Voc.setting.exists("sound_type"))
                     Voc.setting.add("sound_type", ".mp3");
                 if (!Voc.setting.exists("data_version"))
                     Voc.setting.add("data_version", "0");
+                await task;
+                await DisplayAlert("完成", "設定完成", "了解");
             }
             else if (str == "更新單字庫")
             {
                 var s = await Voc.GetAsync(Voc.setting["website"] + "/version.php");
                 if (s == null || s == "")
                     goto network_error;
-                if (int.Parse(Voc.setting["data_version"]) < int.Parse(s))
+                if (int.Parse(Voc.setting["data_version"]) >= int.Parse(s))
                 {
                     await DisplayAlert("錯誤", "已經是最新版了", "了解");
                     goto end;
                 }
+                var task = DisplayAlert("請等一下", "讀取中，請稍後", "了解");
                 Voc.setting["data_version"] = s;
                 s = await Voc.GetAsync(Voc.setting["website"] + "/words.php");
                 if (s == null || s == "")
@@ -122,6 +132,8 @@ namespace Cut
                     goto network_error;
                 await fileService.SaveTextAsync("note.txt", s);
                 Voc.note = await Voc.GetDocAsync("note.txt");
+                await task;
+                await DisplayAlert("完成", "設定完成", "了解");
                 goto end;
                 network_error:;
                 await DisplayAlert("錯誤", "網路錯誤", "了解");
@@ -131,7 +143,7 @@ namespace Cut
             {
                 set_list_items.Clear();
                 set_list_items.Add("更新單字庫");
-                set_list_items.Add("重置單字庫");
+                //set_list_items.Add("重置單字庫");
                 set_list_items.Add("重置應用程式");
                 set_list_items.Add("回設定主頁");
             }
@@ -142,7 +154,6 @@ namespace Cut
                 set_list_items.Add("聲音選項");
                 set_list_items.Add("單字庫選項");
                 set_list_items.Add("測驗選項");
-                set_list_items.Add("心智圖選項");
                 set_list_items.Add("關於");
             }
             else if (str == "聲音選項")
@@ -167,7 +178,7 @@ namespace Cut
             }
             else if (str == "發音:Dictionary.com")
             {
-                Voc.setting["sound_ur"] = "http://dictionary.reference.com/browse/";
+                Voc.setting["sound_url"] = "http://dictionary.reference.com/browse/";
                 Voc.setting["sound_url2"] = "http://static.sfdict.com/staticrep/dictaudio";
                 Voc.setting["sound_type"] = ".mp3";
 
@@ -175,7 +186,7 @@ namespace Cut
             }
             else if (str == "發音:Bing 美國")
             {
-                Voc.setting["sound_ur"] = "http://cn.bing.com/dict/search?mkt=zh-cn&q=";
+                Voc.setting["sound_url"] = "http://cn.bing.com/dict/search?mkt=zh-cn&q=";
                 Voc.setting["sound_url2"] = "https://dictionary.blob.core.chinacloudapi.cn/media/audio/tom";
                 Voc.setting["sound_type"] = ".mp3";
 
@@ -185,12 +196,9 @@ namespace Cut
             }
             else if (str == "發音:Bing 英國")
             {
-                Voc.setting["sound_ur"] = "http://cn.bing.com/dict/search?mkt=zh-cn&q=";
+                Voc.setting["sound_url"] = "http://cn.bing.com/dict/search?mkt=zh-cn&q=";
                 Voc.setting["sound_url2"] = "https://dictionary.blob.core.chinacloudapi.cn/media/audio/george";
                 Voc.setting["sound_type"] = ".mp3";
-
-
-
                 await DisplayAlert("成功", "設定成功", "了解");
             }
             else if (str == "關於")
@@ -206,32 +214,11 @@ namespace Cut
                 //ShowMsg("版本號:ver " + IntToStr(version.Major) + "." + IntToStr(version.Minor) + "." + IntToStr(version.Build) + "." + IntToStr(version.Revision) );
                 await DisplayAlert("版本號", "ver 0.1.0", "了解");
             }
-            else if (str == "心智圖選項")
-            {
-                set_list_items.Clear();
-                set_list_items.Add("關閉心智圖選項");
-                var s = new StackLayout { Orientation = StackOrientation.Horizontal };
-                var tp = new Label { Text = "節點數量：" };
-                var tmp = new Entry { Text = Voc.setting["mind_map_cnt"] };
-                tmp.TextChanged += (sen, ex) => {
-                    Voc.setting["mind_map_cnt"] = tmp.Text;
-                };
-                s.Children.Add(tp);
-                s.Children.Add(tmp);
-                st.Children.Add(s);
-            }
-            else if (str == "關閉心智圖選項")
-            {
-                st.Children.RemoveAt(st.Children.Count - 1);
-                Set_list_ItemSelected("回設定主頁", null);
-            }
             else if (str == "測驗選項")
             {
                 set_list_items.Clear();
                 set_list_items.Clear();
                 set_list_items.Add("關閉測驗選項");
-
-
                 var s = new StackLayout { Orientation = StackOrientation.Horizontal };
                 var tp = new Label { Text = "選擇題選項數量(2~100)：" };
                 if (Voc.setting["sellect_prob_cnt"] == "")
@@ -259,7 +246,7 @@ namespace Cut
 
         private void Host_name_TextChanged(object sender, TextChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            Voc.setting["website"] = host_name.Text;
         }
     }
 }
