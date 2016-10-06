@@ -20,7 +20,7 @@ namespace Cut
             "聲音選項",
             "單字庫選項",
             "測驗選項",
-            "心智圖選項",
+            "啟動選項",
             "關於"
         };
         public SettingPage()
@@ -42,7 +42,7 @@ namespace Cut
             host_name.Text = Voc.setting["website"];
             grid.Children.Add(host_name, 1,0);
             st.Children.Add(grid);
-            st.Children.Add(new Label { Text = "(伺服器位置留空後，重開應用程式會回復預設值)" });
+            st.Children.Add(new Label { Text = "(此位置留白，重開應用程式會回復預設)" });
             set_list.ItemSelected += Set_list_ItemSelected;
             set_list.ItemsSource = set_list_items;
             st.Children.Add(set_list);
@@ -133,7 +133,7 @@ namespace Cut
                 await fileService.SaveTextAsync("note.txt", s);
                 Voc.note = await Voc.GetDocAsync("note.txt");
                 await task;
-                await DisplayAlert("完成", "設定完成", "了解");
+                await DisplayAlert("完成", "設定完成，請重新啟動應用程式", "了解");
                 goto end;
                 network_error:;
                 await DisplayAlert("錯誤", "網路錯誤", "了解");
@@ -150,10 +150,10 @@ namespace Cut
             else if (str == "回設定主頁")
             {
                 set_list_items.Clear();
-                set_list_items.Add("設定主題色彩");
                 set_list_items.Add("聲音選項");
                 set_list_items.Add("單字庫選項");
                 set_list_items.Add("測驗選項");
+                set_list_items.Add("啟動選項");
                 set_list_items.Add("關於");
             }
             else if (str == "聲音選項")
@@ -212,7 +212,7 @@ namespace Cut
                 //var major = version.Major;
 
                 //ShowMsg("版本號:ver " + IntToStr(version.Major) + "." + IntToStr(version.Minor) + "." + IntToStr(version.Build) + "." + IntToStr(version.Revision) );
-                await DisplayAlert("版本號", "ver 0.1.0", "了解");
+                await DisplayAlert("版本號", "ver 1.2.0", "了解");
             }
             else if (str == "測驗選項")
             {
@@ -221,7 +221,8 @@ namespace Cut
                 set_list_items.Add("關閉測驗選項");
                 var s = new StackLayout { Orientation = StackOrientation.Horizontal };
                 var tp = new Label { Text = "選擇題選項數量(2~100)：" };
-                if (Voc.setting["sellect_prob_cnt"] == "")
+                var ss = Voc.setting["sellect_prob_cnt"] ;
+                if (ss == ""||ss==null)
                     Voc.setting["sellect_prob_cnt"] = "5";
                 var tmp = new Entry { Text = Voc.setting["sellect_prob_cnt"] };
                 tmp.TextChanged += (sen, ex) => {
@@ -237,6 +238,23 @@ namespace Cut
                 st.Children.RemoveAt(st.Children.Count - 1);
 
                 Set_list_ItemSelected("回設定主頁", null);
+            }
+            else if (str == "啟動選項")
+            {
+                set_list_items.Clear();
+                set_list_items.Add("啟動後進入首頁");
+                set_list_items.Add("啟動後進入單字搜尋頁面");
+                set_list_items.Add("回設定主頁");
+            }
+            else if (str == "啟動後進入首頁")
+            {
+                Voc.setting["home_page"] = "home";
+                await DisplayAlert("成功", "設定成功", "了解");
+            }
+            else if (str == "啟動後進入單字搜尋頁面")
+            {
+                Voc.setting["home_page"] = "search";
+                await DisplayAlert("成功", "設定成功", "了解");
             }
             else
             {

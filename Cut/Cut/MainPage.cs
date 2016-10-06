@@ -9,13 +9,9 @@ namespace Cut
     public class MainPage : MasterDetailPage
     {
         MasterPage masterPage;
-        protected override void OnAppearing()
-        {
-            base.OnAppearing();
-        }
         public MainPage()
         {
-            Navigation.PushModalAsync(new MainLoadingPage());
+            Navigation.PushModalAsync(new MainLoadingPage(this));
             masterPage = new MasterPage();
             Master = masterPage;
             Detail = new NavigationPage(new HomePage());
@@ -35,6 +31,21 @@ namespace Cut
                 masterPage.ListView.SelectedItem = null;
                 IsPresented = false;
             }
+        }
+        bool navi_zero = false;
+        protected override bool OnBackButtonPressed()
+        {
+            if (Detail.Navigation.NavigationStack.Count > 1) {
+                navi_zero = false;
+                return base.OnBackButtonPressed();
+            }
+            else {
+                if (!navi_zero)
+                    navi_zero = true;
+                else
+                    return base.OnBackButtonPressed();
+            }
+            return true;
         }
     }
 }

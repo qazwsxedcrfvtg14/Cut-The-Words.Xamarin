@@ -22,6 +22,7 @@ namespace Cut
                 new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) },
                 new RowDefinition { Height = new GridLength(1, GridUnitType.Star) },
             },
+            Margin = 5
         };
         Label title;
         StackLayout test_stp;
@@ -76,6 +77,7 @@ namespace Cut
                 var res = new Label
                 {
                     Text = "錯誤",
+                    FontSize=16
                 };
                 var tgr2 = new TapGestureRecognizer();
                 tgr2.Tapped += Tgr2_Tapped;
@@ -159,15 +161,23 @@ namespace Cut
                     Navigation.PushAsync(new TestPage2(0, 0));
                 })
             });
-            title = new Label { Text = "正確：0 錯誤：0" }; ;
+            title = new Label { Text = "正確：0 錯誤：0", FontSize=18 }; ;
             //var tb1 = new Label { Text = "這份考卷在關掉此應用程式或是按右上重整前都不會消失喔!", HorizontalTextAlignment = TextAlignment.Center };
-            var tb2 = new Label { Text = "想看小抄請對【正確】/【錯誤】字樣上連點兩下", HorizontalTextAlignment = TextAlignment.Center };
+            var tb2 = new Label {
+                Text = "想看小抄請對【正確】/【錯誤】字樣上連點兩下",
+                HorizontalTextAlignment = TextAlignment.Center,
+                FontSize=15
+            };
             test_stp = new StackLayout { };
             grid.Children.Add(title, 0, 0);
             //grid.Children.Add(tb1, 0, 1);
             grid.Children.Add(tb2, 0, 2);
             grid.Children.Add(test_stp, 0, 3);
-            Content = new ScrollView { Content = grid };
+            grid.Margin = new Thickness(10, 10, 10, 5);
+            Content = new ScrollView {
+                Orientation = ScrollOrientation.Vertical,
+                Content = grid
+            };
             Init();
         }
 

@@ -20,7 +20,7 @@ namespace Cut
             public T Key;
             public S Value;
             public Node l, r, fa;
-            public int Count;
+            public UInt32 Count;
             public Node(T _k, S _v, Node _fa = null) {
                 Key = _k;
                 Value = _v;
@@ -72,7 +72,7 @@ namespace Cut
                 return null;
             }
         }
-        int rand = (new Random()).Next();
+        UInt32 rand = (UInt32)(new Random()).Next();
         Node Merge(Node a, Node b) {
             if (a == null) return b;
             if (b == null) return a;
@@ -131,7 +131,16 @@ namespace Cut
             }
         }
         Node root;
-        public Node begin() {
+        public UInt32 Count
+        {
+            get
+            {
+                if (root == null) return 0;
+                else return root.Count;
+            }
+        }
+        public Node begin()
+        {
             if (root == null) return null;
             return root.left();
         }

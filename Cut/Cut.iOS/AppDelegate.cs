@@ -7,6 +7,9 @@ using UIKit;
 using XLabs.Ioc;  // Using for SimpleContainer 
 using XLabs.Platform.Services.Geolocation;  // Using for Geolocation 
 using XLabs.Platform.Device; // Using for Device 
+using AudioToolbox;
+using AVFoundation;
+
 namespace Cut.iOS
 {
     // The UIApplicationDelegate for the application. This class is responsible for launching the 
@@ -26,6 +29,14 @@ namespace Cut.iOS
         {
             Rg.Plugins.Popup.IOS.Popup.Init();
             global::Xamarin.Forms.Forms.Init();
+
+
+            NSError error;
+            AVAudioSession instance = AVAudioSession.SharedInstance();
+            instance.SetCategory(new NSString("AVAudioSessionCategoryPlayback"), AVAudioSessionCategoryOptions.MixWithOthers, out error);
+            instance.SetMode(new NSString("AVAudioSessionModeDefault"), out error);
+            instance.SetActive(true, AVAudioSessionSetActiveOptions.NotifyOthersOnDeactivation, out error);
+
             LoadApplication(new App());
 
             return base.FinishedLaunching(app, options);

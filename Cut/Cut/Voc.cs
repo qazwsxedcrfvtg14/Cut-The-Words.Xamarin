@@ -71,11 +71,6 @@ namespace Cut
                     else if (star && s[i] == ' ') d += ' ';
                     else if (s[i] == ',') tag = true;
                     else if (s[i] == '/') a.Add("");
-                    else if (s[i] >= 'A' && s[i] <= 'Z')
-                    {
-                        a[a.Count - 1] += s[i] - 'A' + 'a';
-                        d += s[i] - 'A' + 'a';
-                    }
                     else
                     {
                         a[a.Count - 1] += s[i];
@@ -207,7 +202,7 @@ namespace Cut
                 if (tmp.Count != 0)
                 {
                     ve.Add(x.Key + "-");
-                    if (++cnt == 30) break;
+                    if (++cnt == 25) break;
                 }
             }
             foreach (var x in root.data)
@@ -216,7 +211,7 @@ namespace Cut
                 if (tmp.Count != 0)
                 {
                     ve.Add("-"+x.Key + "-");
-                    if (++cnt == 60) break;
+                    if (++cnt == 50) break;
                 }
             }
             foreach (var x in suffix.data)
@@ -225,7 +220,7 @@ namespace Cut
                 if (tmp.Count != 0)
                 {
                     ve.Add("-"+x.Key);
-                    if (++cnt == 60) break;
+                    if (++cnt == 75) break;
                 }
             }
             ve.Sort(delegate (string x, string y)
@@ -235,8 +230,8 @@ namespace Cut
                 else if (y[0] == '-') return x.CompareTo(y.Substring(1));
                 else return x.CompareTo(y);
             });
-            if(ve.Count>30)
-                ve.RemoveRange(30,ve.Count-30);
+            if(ve.Count>25)
+                ve.RemoveRange(25,ve.Count-25);
             return ve;
         }
 
@@ -616,14 +611,13 @@ namespace Cut
                 return GetExpSimpleOrg(s);
             }
         }
-        public static StackLayout ExpStack(string s)
+        public static StackLayout ExpStack(string s,int size=20)
         {
             var expst = new StackLayout { Orientation = StackOrientation.Vertical };
             s = s.Trim();
             string pre = "";
             bool iv = false;
-            var stp = new StackLayout();
-            stp.Orientation = StackOrientation.Horizontal;
+            var stp = new StackLayout { Orientation = StackOrientation.Horizontal };
             foreach (var x in s)
                 if (!iv && x == '[')
                 {
@@ -633,6 +627,7 @@ namespace Cut
                         var tmp = new Label
                         {
                             Text = pre,
+                            FontSize=size,
                             Margin = new Thickness(10, 0, 0, 0),
                             HorizontalTextAlignment = TextAlignment.Center,
                             VerticalTextAlignment = TextAlignment.Center
@@ -650,6 +645,8 @@ namespace Cut
                     var tmp = new Label
                     {
                         Text = pre,
+                        FontSize = size,
+                        LineBreakMode = LineBreakMode.WordWrap,
                         //FontAttributes = FontAttributes.Bold,
                         Margin = new Thickness(3, 2, 3, 2),
                         HorizontalTextAlignment = TextAlignment.Center,
@@ -659,10 +656,23 @@ namespace Cut
                     {
                         //MinimumWidthRequest = 50,
                         Margin = new Thickness(10, 0, 0, 4),
-                        //HasShadow = false,
-                        OutlineColor = Color.Silver,
+                        //MinimumWidthRequest = 600,
+                        HasShadow = false,
+                        OutlineColor = Color.Silver, 
                         Content = tmp,
                         Padding = 0
+                    };
+                    tmp.SizeChanged += (object sender, EventArgs e) => {
+                        if (tmp.Width < 57)
+                        {
+                            tmp.WidthRequest = 57;
+                            bor.IsVisible = false;
+                            Task.Run(() => {
+                                Device.BeginInvokeOnMainThread(() => {
+                                    bor.IsVisible = true;
+                                });
+                            });
+                        }
                     };
                     stp.Children.Add(bor);
                     pre = "";
@@ -677,6 +687,7 @@ namespace Cut
                 {
                     Text = pre,
                     //FontSize = 20;
+                    FontSize = size,
                     Margin = new Thickness(10, 0, 0, 0),
                     HorizontalTextAlignment = TextAlignment.Center,
                     VerticalTextAlignment = TextAlignment.Center

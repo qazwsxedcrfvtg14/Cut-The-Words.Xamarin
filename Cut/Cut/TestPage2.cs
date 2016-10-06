@@ -22,14 +22,15 @@ namespace Cut
                 new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) },
                 new RowDefinition { Height = new GridLength(1, GridUnitType.Star) },
             },
+            Margin=5,
         };
         Label title;
         StackLayout test_stp;
         int ac = 0, wa = 0;
         bool lck=false;
         string ans=null;
-        ListView lis;
-        ObservableCollection<string> lis_Items;
+        ObservableCollection<wod> lis_Items;
+        ListView lis = new ListView { };
         void Init()
         {
             int cnt = 0;
@@ -70,10 +71,11 @@ namespace Cut
             test_stp.Children.Clear();
             var rand = new Random();
             int pbs;
-            if (Voc.setting["sellect_prob_cnt"] == "")
+            string s = Voc.setting["sellect_prob_cnt"];
+            if (s == ""||s==null)
 			    pbs = 5;
 		    else
-			    pbs = Math.Max(2, Math.Min(100, int.Parse(Voc.setting["sellect_prob_cnt"])));
+			    pbs = Math.Max(2, Math.Min(100, int.Parse(s)));
             for (int i = 0; i < pbs-1; i++)
             {
                 for (int j = 0; ; j++)
@@ -110,22 +112,34 @@ namespace Cut
                     Voc.ExpStack(Voc.GetExpSimple(Voc.words.val(ans)))
                 }
             };*/
+            //lis = new ListView();
+            //lis_Items = new ObservableCollection<string>();
+
             lis = new ListView();
-            lis_Items = new ObservableCollection<string>();
+            lis_Items = new ObservableCollection<wod>();
             lis.ItemsSource = lis_Items;
-            lis.ItemTapped += Lis_ItemTapped;
+            var customCell = new DataTemplate(typeof(stcell));
+            customCell.SetBinding(stcell.vocProperty, "voc");
+            customCell.SetBinding(stcell.expProperty, "exp");
+            lis.ItemTemplate = customCell;
+            lis.ItemSelected += lis_ItemSelected;
+            lis.HasUnevenRows = true;
+            
             foreach (var x in prob)
             {
-                lis_Items.Add(x);
+                lis_Items.Add(new wod(x,""));
             }
             test_stp.Children.Add(lis);
             //block.Margin = new Thickness(0, 15, 0, 0);
             //test_stp.Children.Add(block);
         }
 
-        private void Lis_ItemTapped(object sender, ItemTappedEventArgs e)
+        
+        private void lis_ItemSelected(object sender, SelectedItemChangedEventArgs e)
         {
-            var tmp = lis.SelectedItem as string;
+            var tp = lis.SelectedItem as wod;
+            if (tp == null) return;
+            var tmp = tp.voc;
             
             if (tmp == null||lck) return;
             lck = true;
@@ -136,7 +150,8 @@ namespace Cut
                 {
                     Text = "正確",
                     TextColor = Color.Green,
-                    Margin = 10
+                    Margin = 10,
+                    FontSize=25
                 };
                 test_stp.Children.Add(tb);
                 if (Voc.favorite.exists(ans))
@@ -156,7 +171,8 @@ namespace Cut
                 {
                     Text = "錯誤",
                     TextColor = Color.Red,
-                    Margin = 10
+                    Margin = 10,
+                    FontSize = 25
                 };
                 test_stp.Children.Add(tb);
                 if (Voc.favorite.exists(ans))
@@ -170,14 +186,14 @@ namespace Cut
                 }
             }
             for (int i = 0; i < lis_Items.Count; i++)
-                if (lis_Items[i] == ans)
-                    lis_Items[i] = "> " + ans;
+                if (lis_Items[i].voc == ans)
+                    lis_Items[i] = new wod(">", lis_Items[i].voc);
                 else
-                    lis_Items[i] = "  " + ans;
+                    lis_Items[i] = new wod("  ", lis_Items[i].voc);
             lis.SelectedItem = null;
             Device.StartTimer(new TimeSpan(10000000), () => {
-                Navigation.PopAsync();
                 Navigation.PushAsync(new TestPage2(ac, wa));
+                Navigation.RemovePage(Navigation.NavigationStack[Navigation.NavigationStack.Count-2]);
                 return false;
             });
         }
@@ -189,9 +205,7 @@ namespace Cut
             wa = _wa;
             Title = "單字測驗";
             
-            title = new Label { Text = "正確：0 錯誤：0" }; ;
-            //var tb1 = new Label { Text = "這份考卷在關掉此應用程式或是按右上重整前都不會消失喔!", HorizontalTextAlignment = TextAlignment.Center };
-            //var tb2 = new Label { Text = "想看小抄請對【正確】/【錯誤】字樣上連點兩下", HorizontalTextAlignment = TextAlignment.Center };
+            title = new Label { Text = "正確：0 錯誤：0" ,FontSize=18}; ;
             test_stp = new StackLayout { };
             grid.Children.Add(title, 0, 0);
             //grid.Children.Add(tb1, 0, 1);

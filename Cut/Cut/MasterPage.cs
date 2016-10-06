@@ -55,6 +55,11 @@ namespace Cut
             });
             masterPageItems.Add(new MasterPageItem
             {
+                Title = "圖片掃描",
+                TargetType = typeof(PhotoPage)
+            });
+            masterPageItems.Add(new MasterPageItem
+            {
                 Title = "設定",
                 TargetType = typeof(SettingPage)
             });
@@ -62,10 +67,14 @@ namespace Cut
             {
                 ItemsSource = masterPageItems,
                 ItemTemplate = new DataTemplate(() => {
-                    var imageCell = new ImageCell();
-                    imageCell.SetBinding(TextCell.TextProperty, "Title");
+                    //var imageCell = new ImageCell();
+                    //imageCell.SetBinding(TextCell.TextProperty, "Title");
+                    //return imageCell;
                     //imageCell.SetBinding(ImageCell.ImageSourceProperty, "IconSource");
-                    return imageCell;
+                    var Cell = new TextCell();
+                    Cell.SetBinding(TextCell.TextProperty, "Title");
+                    //Cell.TextColor = Color.Aqua;
+                    return Cell;
                 }),
                 VerticalOptions = LayoutOptions.FillAndExpand,
                 SeparatorVisibility = SeparatorVisibility.None

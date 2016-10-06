@@ -15,7 +15,7 @@ namespace Cut
         {
             return true;
         }
-        public MainLoadingPage()
+        public MainLoadingPage(MainPage mainPage)
         {
             
             var progressBar = new ProgressBar
@@ -106,18 +106,14 @@ namespace Cut
 
                 Voc.note = await Voc.GetDocAsync("note", true);
                 pr.Report(100);
-            });
-            Device.StartTimer(new TimeSpan(1000000),() => {
-                if (task.IsCompleted)
+                Device.BeginInvokeOnMainThread(() =>
                 {
-                    //Navigation.NavigationStack.
-                    //var page = Navigation.NavigationStack.Last();
-                    //Navigation.RemovePage(page);
                     Navigation.PopModalAsync();
-                    return false;
-                }
-                return true;
+                    if(Voc.setting["home_page"]=="search")
+                        mainPage.Detail = new NavigationPage((Page)Activator.CreateInstance(typeof(SearchVocPage)));
+                });
             });
         }
+        
     }
 }

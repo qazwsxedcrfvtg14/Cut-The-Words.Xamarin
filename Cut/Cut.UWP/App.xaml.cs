@@ -14,6 +14,13 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using XLabs.Forms;
+using XLabs.Ioc;
+using XLabs.Platform.Device;
+using XLabs.Platform.Mvvm;
+using XLabs.Platform.Services;
+using XLabs.Platform.Services.Media;
+using XLabs.Serialization;
 
 namespace Cut.UWP
 {
@@ -29,9 +36,23 @@ namespace Cut.UWP
         public App()
         {
             this.InitializeComponent();
+
+            var resolverContainer = new SimpleContainer();
+
             var app = new XLabs.Forms.XFormsAppWin();
             app.Init(this);
+
             this.Suspending += OnSuspending;
+            resolverContainer
+                .Register<IDevice>(t => WindowsDevice.CurrentDevice)
+                .Register<IDisplay>(t => Resolver.Resolve<IDevice>().Display)
+                .Register<IDependencyContainer>(t => resolverContainer)
+                .Register<XFormsAppWin>(app)
+                .Register<IXFormsApp>(app)
+                .Register<ISecureStorage, SecureStorage>()
+                ;
+
+            Resolver.SetResolver(resolverContainer.GetResolver());
         }
 
         /// <summary>

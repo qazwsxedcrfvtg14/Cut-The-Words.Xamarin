@@ -40,6 +40,14 @@ namespace Cut
             }
         }
         Node root=new Node();
+        UInt32 count=0;
+        public UInt32 Count
+        {
+            get
+            {
+                return count;
+            }
+        }
         public void add(string s, T value)
         {
             if (s == null) return;
@@ -54,8 +62,10 @@ namespace Cut
                 }
                 now = nx.Value;
             }
+            if (now.real) count--;
             now.val = new KeyValuePair<string,T>(s,value);
             now.real = true;
+            count++;
         }
 
         public void remove(string s)
@@ -69,6 +79,7 @@ namespace Cut
                     return;
                 now = nx.Value;
             }
+            if (now.real) count--;
             now.val = new KeyValuePair<string, T>();
             //now.val.Value = default(T);
             now.real = false;

@@ -23,9 +23,11 @@ namespace Cut
             voc_root = new StackLayout { Orientation = StackOrientation.Horizontal },
             voc_croot = new StackLayout { Orientation = StackOrientation.Horizontal },
             //expst = new StackLayout(),
-            pics = new StackLayout(),
-            alias_list = new StackLayout(),
-            VocList = new StackLayout();
+            pics = new StackLayout();
+            //alias_list = new StackLayout();
+        //VocList = new StackLayout();
+        ObservableCollection<wod> VocList_Items, alias_list_Items;
+        ListView VocList=new ListView { }, alias_list = new ListView { };
         internal ContentView
             expst = new ContentView();
         internal ScrollView
@@ -49,16 +51,21 @@ namespace Cut
                     //new RowDefinition { Height = new GridLength(100, GridUnitType.Absolute) }
                 },
             };
-        Label kk = new Label();
+        Label kk = new Label {FontSize=18,Text=" "};
         string media_uri,_voc;
-        internal void Init(string data,bool first=true)
+        bool first = true;
+        internal void Init(string data)
         {
             tivoc.Text = data;
+            tivoc.FontSize = 26;
+            if (Device.OS == TargetPlatform.Android)
+                tivoc.TextColor = Color.FromRgb(255,255,204);
             wds = Voc.GetExp(Voc.words.val(data));
             expst.Content = Voc.ExpStack(wds.Item1);
             if (first)
             {
-                this.Appearing += async (sender, e) =>
+
+                Task.Run(async () =>
                 {
                     var s = await Voc.GetAsync(Voc.setting.val("sound_url") + data);
                     if (s == null) return;
@@ -75,36 +82,43 @@ namespace Cut
                         s = s.Substring(pos + 1);
                     }
                     media_uri = s;
-                    ToolbarItems[4].Icon = "volume.png";
-                    if (Voc.setting["auto_play"] == "On")
-                        DependencyService.Get<IAudio>().PlayMp3File(media_uri);
-                };
-                this.Appearing += async (sender, e) =>
+                    Device.BeginInvokeOnMainThread(() => {
+                        ToolbarItems[4].Icon = "volume.png";
+                        if (Voc.setting["auto_play"] == "On")
+                            DependencyService.Get<IAudio>().PlayMp3File(media_uri);
+                    });
+                });
+                pics.Children.Clear();
+                Task.Run(async () =>
                 {
                     var s = await Voc.GetAsync("https://www.bing.com/images/search?q=" + data);
-                    if (s == null) return;
-                    pics.Children.Clear();
+                    var v = new List<string>();
+                    if (s == null) return ;
                     for (int i = 0; i < 4; i++)
                     {
                         var be = s.IndexOf(".mm.bing.net/");
-                        if (be == -1 || be - 25 < 0) return;
+                        if (be == -1 || be - 25 < 0) return ;
                         s = s.Substring(be - 25);
                         be = s.IndexOf("http");
-                        if (be == -1) return;
+                        if (be == -1) return ;
                         s = s.Substring(be);
                         var ed = s.IndexOf("\"");
-                        if (ed == -1) return;
-                        pics.Children.Add(new Image
-                        {
-                            Source = s.Substring(0, ed),
-                            Margin = new Thickness(10, 0, 0, 0),
-                            HeightRequest = 150,
-                        });
+                        if (ed == -1) return ;
+                        v.Add(s.Substring(0, ed));
                         s = s.Substring(ed - 1);
                     }
-                };
-                this.Appearing += async (sender, e) =>
-                {
+                    Device.BeginInvokeOnMainThread(() => {
+                        foreach (var ss in v)
+                            pics.Children.Add(new Image
+                            {
+                                Source = ss,
+                                Margin = new Thickness(10, 0, 0, 0),
+                                HeightRequest = 150,
+                            });
+                    });
+                });
+                
+                Task.Run(async () => {
                     var web = await Voc.GetAsync("http://tw.dictionary.search.yahoo.com/search?p=" + data);
                     if (web == null) return;
                     int len = web.Length;
@@ -117,12 +131,15 @@ namespace Cut
                     beg = web.IndexOf("]");
                     if (beg == -1) return;
                     web = web.Substring(0, beg + 1);
-                    kk.Text = web;
-                };
+                    Device.BeginInvokeOnMainThread(() => {
+                        kk.Text = web;
+                    });
+                });
             }
             //Web Data Begin
             //Web Data End
             var ve = Voc.Show(data);
+            //var ve = new List<Tuple<string, string>>();
             //var tp = new List<Picker>();
             //var tmp = new List<Label>();
             voc_root.Children.Clear();
@@ -131,8 +148,8 @@ namespace Cut
             {
                 var tmp = new Label {
                     Text=x.Item2,
-                    Margin=new Thickness(10,5,10,5),
-                    //FontSize=18,
+                    Margin=new Thickness(10,0,10,0),
+                    FontSize=20,
                 };
                 var tgr = new TapGestureRecognizer();
                 tgr.Tapped += Tgr_Tapped ;
@@ -144,6 +161,7 @@ namespace Cut
             {
                 var tmp = new Picker {
                     Margin = new Thickness(10, 5, 10, 5),
+                    //TODO : Font Size
                 };
                 var vw = Voc.CutExp(x.Item1);
                 foreach (var y in vw)
@@ -163,19 +181,54 @@ namespace Cut
                 ToolbarItems[0].Icon = "favorite.png";
             string _voc = data, _exp = Voc.GetExpSimple(Voc.words.val(_voc));
 
-            var task = Task.Run(() =>
+
+            if (first)
+            {
+                VocList_Items = new ObservableCollection<wod>();
+                VocList.ItemsSource = VocList_Items;
+                var customCell = new DataTemplate(typeof(stcell));
+                customCell.SetBinding(stcell.vocProperty, "voc");
+                customCell.SetBinding(stcell.expProperty, "exp");
+                VocList.ItemTemplate = customCell;
+                VocList.ItemSelected += VocList_ItemSelected;
+                VocList.HasUnevenRows = true;
+
+                alias_list_Items = new ObservableCollection<wod>();
+                alias_list.ItemsSource = alias_list_Items;
+                alias_list.ItemTemplate = customCell;
+                alias_list.ItemSelected += Alias_list_ItemSelected; ;
+                alias_list.HasUnevenRows = true;
+            }
+            if (first)
+                VocList_Items.Add(new wod("", "讀取中..."));
+            VocList.HeightRequest = VocList_Items.Count * stcell.Height;
+            alias_list.HeightRequest = alias_list_Items.Count * stcell.Height;
+
+            Task.Run(() =>
             {
                 List<string> lis = new List<string>();
                 foreach (var x in Voc.words.data)
                     if (x.Key != _voc && Voc.GetExpSimple(x.Value) == _exp)
                         lis.Add(x.Key);
-                return lis;
+                Device.BeginInvokeOnMainThread(() => {
+                    alias_list_Items.Clear();
+                    foreach (var x in lis)
+                        alias_list_Items.Add(new wod(x, ""));
+                    alias_list.HeightRequest = alias_list_Items.Count * stcell.Height;
+                });
             });
 
-            var tsk = Task.Run(() =>
+            Task.Run(() =>
             {
                 if (data.Length == 1 || (data.Split(' ').Length) != 1)
-                    return new List<string>();
+                {
+                    Device.BeginInvokeOnMainThread(() =>
+                    {
+                        VocList_Items.Clear();
+                        VocList.HeightRequest = VocList_Items.Count * stcell.Height;
+                    });
+                    return;
+                }
                 string reg_string = "";
                 if (data.Length > 2 && data[data.Length - 1] == 'e')
                     reg_string = ".*" + data.Substring(0, data.Length - 1) + ".*";
@@ -194,86 +247,19 @@ namespace Cut
                             break;
                         }
                 }
-                return lis;
-            });
-            if (first)
-                VocList.Children.Add(new Label { Text = "讀取中..." });
-            Device.StartTimer(new TimeSpan(1000000), () => {
-                bool tsk_fin = false, task_fin = false;
-                if (tsk.IsCompleted && !tsk_fin)
-                {
-                    var lis = tsk.Result;
-                    VocList.Children.Clear();
+                Device.BeginInvokeOnMainThread(() => {
+                    VocList_Items.Clear();
                     foreach (var x in lis)
-                    {
-                        var stp = new StackLayout
-                        {
-                            Orientation = StackOrientation.Horizontal,
-                            Children = {
-                                        new Label{Text = x},
-                                        new Label {
-                                            Text = Voc.GetExpSimple(Voc.words.val(x)).Trim(),
-                                            Margin = new Thickness(20, 0, 0, 0)
-                                        },
-                                    }
-                        };
-                        var tgr2 = new TapGestureRecognizer();
-                        tgr2.Tapped += Tgr2_Tapped; ;
-                        stp.GestureRecognizers.Add(tgr2);
-                        VocList.Children.Add(stp);
-                    }
-                    tsk_fin = true;
-                }
-                if (task.IsCompleted && !task_fin)
-                {
-                    var lis = task.Result;
-                    alias_list.Children.Clear();
-                    foreach (var x in lis)
-                    {
-                        var tmp = new Label { Text = x, Margin = 5 };
-                        var tgr = new TapGestureRecognizer();
-                        tgr.Tapped += Tgr_Tapped;
-                        tmp.GestureRecognizers.Add(tgr);
-                        alias_list.Children.Add(tmp);
-                    }
-                    task_fin = true;
-                }
-                if (tsk_fin && task_fin)
-                    return false;
-                return true;
+                        VocList_Items.Add(new wod(x, Voc.GetExpSimple(Voc.words.val(x)).Trim()));
+                    VocList.HeightRequest = VocList_Items.Count * stcell.Height;
+                });
             });
-            /*Device.StartTimer(new TimeSpan(5000000), () => {
-                if (Voc.rtp != null)
-                {
-                    VocList.Children.Clear();
-                    SortedSet<string> tmp;
-                    if (Voc.rtp.TryGetValue(data,out tmp))
-                        foreach (var x in tmp)
-                        {
-                            var stp = new StackLayout
-                            {
-                                Orientation = StackOrientation.Horizontal,
-                                Children = {
-                                    new Label{Text = x},
-                                    new Label {
-                                        Text = Voc.GetExpSimple(Voc.words.val(x)).Trim(),
-                                        Margin = new Thickness(20, 0, 0, 0)
-                                    },
-                                }
-                            };
-                            var tgr2 = new TapGestureRecognizer();
-                            tgr2.Tapped += Tgr2_Tapped; ;
-                            stp.GestureRecognizers.Add(tgr2);
-
-                            VocList.Children.Add(stp);
-                        }
-                    return false;
-                }
-                return true;
-            });*/
+            //if (first)
+            //VocList.Children.Add(new Label { Text = "讀取中..." });
+            
             var tb = new Label {
                 Margin=10,
-                //FontSize=18,
+                FontSize=16,
             };
             if (Voc.note.exists(data))
                 tb.Text = Voc.note.val(data);
@@ -284,12 +270,27 @@ namespace Cut
             tb.GestureRecognizers.Add(tb_tgr);
             note_view.Content = tb;
             pics.Orientation = StackOrientation.Horizontal;
-
+            first = false;
         }
 
-        private async void  Tgr2_Tapped(object sender, EventArgs e)
+        private async void Alias_list_ItemSelected(object sender, SelectedItemChangedEventArgs e)
         {
-            await Navigation.PushAsync(new SingleVocPage(((sender as StackLayout).Children[0] as Label).Text));
+            var item = (e.SelectedItem as wod);
+            alias_list.SelectedItem = null;
+            if (item != null && item.voc != "")
+            {
+                await Navigation.PushAsync(new SingleVocPage(item.voc));
+            }
+        }
+
+        private async void VocList_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+        {
+            var item = (e.SelectedItem as wod);
+            VocList.SelectedItem = null;
+            if (item != null&&item.voc!="")
+            {
+                await Navigation.PushAsync(new SingleVocPage(item.voc));
+            }
         }
 
         private void Tb_tgr_Tapped(object sender, EventArgs e)
@@ -297,7 +298,7 @@ namespace Cut
             var tb = new Entry {
                 Text = Voc.note.exists(_voc) ? Voc.note.val(_voc) : "",
                 Margin = 20,
-                //FontSize = 18,
+                FontSize = 16,
             };
             tb.Unfocused += Tb_Unfocused;
             note_view.Content = tb;
@@ -313,7 +314,7 @@ namespace Cut
             var tb = new Label
             {
                 Margin = 10,
-                //FontSize=18,
+                FontSize=16,
             };
             if (Voc.note.exists(_voc))
                 tb.Text = Voc.note.val(_voc);
@@ -366,6 +367,7 @@ namespace Cut
         {
             //param.ToLower();
             param = param.Trim();
+            tivoc.Text = param;
             //NavigationPage.SetHasNavigationBar(this, false);
             ToolbarItems.Add(new ToolbarItem
             {
@@ -376,14 +378,14 @@ namespace Cut
                         Voc.favorite.remove(_voc);
                     else
                         Voc.favorite.add(_voc, "");
-                    Init(_voc, false);
+                    Init(_voc);
                 })
             });
             ToolbarItems.Add(new ToolbarItem
             {
                 Icon = "refresh.png",
                 Text = "重整",
-                Command = new Command(async() => {
+                Command = new Command(async () => {
                     await Refresh();
                 })
             });
@@ -403,7 +405,7 @@ namespace Cut
                 Text = "刪除",
                 Command = new Command(async () =>
                 {
-                    var answer = await DisplayAlert("刪除", "真的要刪除嗎?", "是", "否");
+                    var answer = await DisplayAlert("刪除", "真的要刪除嗎?", "是，沒錯！", "否，手滑了");
                     if (answer == true)
                     {
                         Voc.words.remove(_voc);
@@ -418,10 +420,17 @@ namespace Cut
                 Command = new Command(() => { if (media_uri != null) DependencyService.Get<IAudio>().PlayMp3File(media_uri); })
 
             });
-            Content = new ScrollView { Orientation = ScrollOrientation.Vertical, Content = grid, Margin = new Thickness(10, 10, 10, 5) };
+            Content = new ScrollView {
+                Orientation = ScrollOrientation.Vertical,
+                Content = grid,
+                //Padding = new Thickness(10, 10, 10, 5)
+            };
+            grid.Margin = new Thickness(10, 10, 10, 5);
+            //grid.Children.Add(tivoc, 0, 0);
+            //grid.Children.Add(kk, 0, 1);
             grid.Children.Add(tivoc, 0, 0);
-            grid.Children.Add(kk, 0, 1);
-            grid.Children.Add(expst, 0, 2);
+            grid.Children.Add(new Grid { Children = { kk }, Padding = new Thickness(0, 0, 0, 10) }, 0, 1);
+            grid.Children.Add(new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = expst }, 0, 2);
             grid.Children.Add(new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = voc_root }, 0, 3);
             grid.Children.Add(new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = voc_croot }, 0, 4);
             grid.Children.Add(note_view, 0, 5);
@@ -431,7 +440,7 @@ namespace Cut
             if (Voc.words.exists(param))
             {
                 if (_voc != null)
-                    Init(param, false);
+                    Init(param);
                 else
                 {
                     _voc = param;
@@ -547,7 +556,7 @@ namespace Cut
             Voc.words.add(_voc, disc);
             if (nt != "")
                 Voc.note.add(_voc, Voc.s2t(nt));
-            Init(_voc,first);
+            Init(_voc);
         }
         public class MyPopupPage : PopupPage
         {
@@ -587,7 +596,7 @@ namespace Cut
                                         return;
                                     }
                                     Voc.words.add_ok(a,b);
-                                    page.Init(page._voc,false);
+                                    page.Init(page._voc);
                                     await PopupNavigation.PopAsync();
                                 }),
                             }
@@ -609,7 +618,7 @@ namespace Cut
                                     page.wds=Tuple.Create(b,page.wds.Item2);
                                     Voc.words.add(a,Voc.MakeExp(page.wds));
                                     b = Voc.GetExpSimple(Voc.words.val(a));
-                                    page.Init(page._voc,false);
+                                    page.Init(page._voc);
                                     await PopupNavigation.PopAsync();
                                 }),
                             }
