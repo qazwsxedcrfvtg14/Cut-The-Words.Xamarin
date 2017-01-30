@@ -1,8 +1,8 @@
 ﻿{
   "dependencies": {
-    "Microsoft.NETCore.UniversalWindowsPlatform": "5.1.0",
-    "Rg.Plugins.Popup": "1.0.0-pre1",
-    "Xamarin.Forms": "2.3.0.46-pre3",
+    "Microsoft.NETCore.UniversalWindowsPlatform": "5.2.2",
+    "Rg.Plugins.Popup": "1.0.4",
+    "Xamarin.Forms": "2.3.3.180",
     "XLabs.Forms": "2.2.0-pre05"
   },
   "frameworks": {

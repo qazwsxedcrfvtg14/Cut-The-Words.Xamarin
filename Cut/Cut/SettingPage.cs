@@ -21,6 +21,7 @@ namespace Cut
             "單字庫選項",
             "測驗選項",
             "啟動選項",
+            "網路選項",
             "關於"
         };
         public SettingPage()
@@ -154,6 +155,7 @@ namespace Cut
                 set_list_items.Add("單字庫選項");
                 set_list_items.Add("測驗選項");
                 set_list_items.Add("啟動選項");
+                set_list_items.Add("網路選項");
                 set_list_items.Add("關於");
             }
             else if (str == "聲音選項")
@@ -246,6 +248,19 @@ namespace Cut
                 set_list_items.Add("啟動後進入單字搜尋頁面");
                 set_list_items.Add("回設定主頁");
             }
+            else if (str == "網路選項")
+            {
+                set_list_items.Clear();
+                set_list_items.Add("開啟網路音標");
+                set_list_items.Add("關閉網路音標");
+                set_list_items.Add("開啟網路發音");
+                set_list_items.Add("關閉網路發音");
+                set_list_items.Add("開啟網路圖片");
+                set_list_items.Add("關閉網路圖片");
+                set_list_items.Add("開啟網路例句");
+                set_list_items.Add("關閉網路例句");
+                set_list_items.Add("回設定主頁");
+            }
             else if (str == "啟動後進入首頁")
             {
                 Voc.setting["home_page"] = "home";
@@ -254,6 +269,46 @@ namespace Cut
             else if (str == "啟動後進入單字搜尋頁面")
             {
                 Voc.setting["home_page"] = "search";
+                await DisplayAlert("成功", "設定成功", "了解");
+            }
+            else if (str == "開啟網路音標")
+            {
+                Voc.setting["network_kk"] = "true";
+                await DisplayAlert("成功", "設定成功", "了解");
+            }
+            else if (str == "關閉網路音標")
+            {
+                Voc.setting["network_kk"] = "false";
+                await DisplayAlert("成功", "設定成功", "了解");
+            }
+            else if (str == "開啟網路發音")
+            {
+                Voc.setting["network_sound"] = "true";
+                await DisplayAlert("成功", "設定成功", "了解");
+            }
+            else if (str == "關閉網路發音")
+            {
+                Voc.setting["network_sound"] = "false";
+                await DisplayAlert("成功", "設定成功", "了解");
+            }
+            else if (str == "開啟網路圖片")
+            {
+                Voc.setting["network_picture"] = "true";
+                await DisplayAlert("成功", "設定成功", "了解");
+            }
+            else if (str == "關閉網路圖片")
+            {
+                Voc.setting["network_picture"] = "false";
+                await DisplayAlert("成功", "設定成功", "了解");
+            }
+            else if (str == "開啟網路例句")
+            {
+                Voc.setting["network_sent"] = "true";
+                await DisplayAlert("成功", "設定成功", "了解");
+            }
+            else if (str == "關閉網路例句")
+            {
+                Voc.setting["network_sent"] = "false";
                 await DisplayAlert("成功", "設定成功", "了解");
             }
             else

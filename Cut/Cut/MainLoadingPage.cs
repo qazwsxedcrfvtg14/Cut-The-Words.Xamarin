@@ -30,11 +30,11 @@ namespace Cut
             });
             Content = progressBar;
             var task = Task.Run(async() => {
-                int data_version = 1;
+                int data_version = 18;
                 IProgress<int> pr = progress;
                 pr.Report(3);
 
-                await Voc.Init();
+                await Voc.InitAsync();
                 pr.Report(15);
 
                 var fileService = DependencyService.Get<ISaveAndLoad>();
@@ -56,7 +56,7 @@ namespace Cut
                     Voc.setting.add("sound_type", ".mp3");
                 if (!Voc.setting.exists("data_version"))
                     Voc.setting.add("data_version", "0");
-                await Voc.SavingSetting();
+                await Voc.SavingSettingAsync();
                 pr.Report(30);
 
                 if (!fileService.FileExists("favorite.txt"))

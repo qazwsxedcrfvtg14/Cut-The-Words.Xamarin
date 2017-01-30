@@ -63,7 +63,7 @@ namespace Cut
             list.ItemTemplate = customCell;
 
             list.HeightRequest = list_items.Count * stcell.Height;
-            list.ItemSelected += List_ItemSelected;
+            list.ItemSelected += List_ItemSelectedAsync;
             grid.Children.Add(tb1, 1, 2, 0, 1);
             grid.Children.Add(voc, 2, 3, 0, 1);
             grid.Children.Add(tb2, 1, 2, 1, 2);
@@ -72,7 +72,7 @@ namespace Cut
             Content = grid;
         }
 
-        private async void List_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+        private async void List_ItemSelectedAsync(object sender, SelectedItemChangedEventArgs e)
         {
             var ite = e.SelectedItem as wod;
             if (voc.Text == "") return;

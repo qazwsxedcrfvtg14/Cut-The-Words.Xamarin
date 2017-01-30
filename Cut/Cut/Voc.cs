@@ -33,7 +33,7 @@ namespace Cut
                 await fileService.SaveTextAsync(fil, reader.ReadToEnd());
             }
         }
-        public static async Task SavingSetting()
+        public static async Task SavingSettingAsync()
         {
             string ot="";
             foreach (var x in setting.data)
@@ -59,8 +59,10 @@ namespace Cut
             {
                 s = str.ReadLine();
                 if (s == null) break;
-                List<string> a = new List<string>();
-                a.Add("");
+                List<string> a = new List<string>
+                {
+                    ""
+                };
                 string b = "", d = "";
                 int l = s.Length;
                 bool tag = false, star = false, dis = false;
@@ -95,7 +97,7 @@ namespace Cut
                 data.file_name = inp + ".txt";
             return data;
         }
-        public static List<string> match(string match, int beg = 0,string st="")
+        public static List<string> Match(string match, int beg = 0,string st="")
         {
             List<string> ve = new List<string>();
             ve.Clear();
@@ -181,7 +183,7 @@ namespace Cut
             }
             return ve;
         }
-        public static List<string> match_rot(string match, string beg = "")
+        public static List<string> Match_rot(string match, string beg = "")
         {
             string reg_string = "";
             for (int i = 0; i < match.Length; i++)
@@ -726,7 +728,7 @@ namespace Cut
         public static EeekSoft.Text.StringSearch ChtAC2 ;
         public static Dictionary<string, string> ChtDict1 = new Dictionary<string, string>();
         public static Dictionary<string, string> ChtDict2 = new Dictionary<string, string>();
-        public static async Task Init() {
+        public static async Task InitAsync() {
             ChtAC1 = new EeekSoft.Text.StringSearch();
             ChtAC2 = new EeekSoft.Text.StringSearch();
             var fileService = DependencyService.Get<ISaveAndLoad>();

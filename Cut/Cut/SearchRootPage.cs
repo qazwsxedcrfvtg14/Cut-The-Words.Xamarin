@@ -29,8 +29,10 @@ namespace Cut
         public SearchRootPage()
         {
             Title = "部首查詢";
-            input_voc = new SearchBar();
-            input_voc.Placeholder = "請輸入欲查詢之部首，亦可用?或*代表任意或單個字母";
+            input_voc = new SearchBar()
+            {
+                Placeholder = "請輸入欲查詢之部首，亦可用?或*代表任意或單個字母"
+            };
             VocList = new ListView();
             VocList_Items = new ObservableCollection<wod>();
             VocList.ItemsSource = VocList_Items;
@@ -38,11 +40,11 @@ namespace Cut
             customCell.SetBinding(stcell.vocProperty, "voc");
             customCell.SetBinding(stcell.expProperty, "exp");
             VocList.ItemTemplate = customCell;
-            VocList.ItemSelected += Lis_ItemSelected;
+            VocList.ItemSelected += Lis_ItemSelectedAsync;
             VocList.HasUnevenRows = true;
             input_voc.TextChanged += (sender, args)=>{
                 VocList_Items.Clear();
-                foreach (var voc in Voc.match_rot(input_voc.Text + "*"))
+                foreach (var voc in Voc.Match_rot(input_voc.Text + "*"))
                     VocList_Items.Add(new wod(voc, Voc.GetRootExp(voc)));
             };
             /*input_voc.SearchButtonPressed += async (sender, args) => {
@@ -50,7 +52,7 @@ namespace Cut
                 await Navigation.PushAsync(new SingleVocPage(input_voc.Text));
             };*/
             VocList_Items.Clear();
-            foreach (var voc in Voc.match_rot(input_voc.Text + "*"))
+            foreach (var voc in Voc.Match_rot(input_voc.Text + "*"))
                 VocList_Items.Add(new wod(voc, Voc.GetRootExp(voc)));
             Content = new StackLayout
             {
@@ -61,7 +63,7 @@ namespace Cut
             };
         }
 
-        private async void Lis_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+        private async void Lis_ItemSelectedAsync(object sender, SelectedItemChangedEventArgs e)
         {
             var item = (e.SelectedItem as wod);
             if (item != null)

@@ -29,7 +29,8 @@ namespace Cut
         ObservableCollection<wod> VocList_Items, alias_list_Items;
         ListView VocList=new ListView { }, alias_list = new ListView { };
         internal ContentView
-            expst = new ContentView();
+            expst = new ContentView(),
+            sent = new ContentView();
         internal ScrollView
             note_view = new ScrollView();
         internal Tuple<string, List<int>> wds;
@@ -47,7 +48,7 @@ namespace Cut
                     new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) },
                     new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) },
                     new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) },
-                    new RowDefinition { Height = new GridLength(1, GridUnitType.Star) },
+                    new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) },
                     //new RowDefinition { Height = new GridLength(100, GridUnitType.Absolute) }
                 },
             };
@@ -58,14 +59,13 @@ namespace Cut
         {
             tivoc.Text = data;
             tivoc.FontSize = 26;
-            if (Device.OS == TargetPlatform.Android)
+            if (Device.OS == TargetPlatform.Android)    
                 tivoc.TextColor = Color.FromRgb(255,255,204);
             wds = Voc.GetExp(Voc.words.val(data));
             expst.Content = Voc.ExpStack(wds.Item1);
             if (first)
             {
-
-                Task.Run(async () =>
+                if(Voc.setting["network_sound"]!="false")Task.Run(async () =>
                 {
                     var s = await Voc.GetAsync(Voc.setting.val("sound_url") + data);
                     if (s == null) return;
@@ -89,7 +89,7 @@ namespace Cut
                     });
                 });
                 pics.Children.Clear();
-                Task.Run(async () =>
+                if (Voc.setting["network_picture"] != "false")Task.Run(async () =>
                 {
                     var s = await Voc.GetAsync("https://www.bing.com/images/search?q=" + data);
                     var v = new List<string>();
@@ -105,7 +105,7 @@ namespace Cut
                         var ed = s.IndexOf("\"");
                         if (ed == -1) return ;
                         v.Add(s.Substring(0, ed));
-                        s = s.Substring(ed - 1);
+                        s = s.Substring(ed);
                     }
                     Device.BeginInvokeOnMainThread(() => {
                         foreach (var ss in v)
@@ -117,8 +117,8 @@ namespace Cut
                             });
                     });
                 });
-                
-                Task.Run(async () => {
+                if (Voc.setting["network_kk"] != "false")Task.Run(async () => 
+                {
                     var web = await Voc.GetAsync("http://tw.dictionary.search.yahoo.com/search?p=" + data);
                     if (web == null) return;
                     int len = web.Length;
@@ -135,6 +135,110 @@ namespace Cut
                         kk.Text = web;
                     });
                 });
+                if (Voc.setting["network_sent"] != "false")Task.Run(async () =>
+                {
+                    var web = await Voc.GetAsync("http://cn.bing.com/dict/search?mkt=zh-cn&q=" + data);
+                    
+                    string str="", tmp="";
+                    while (true)
+                    {
+                        var beg = web.IndexOf("<div class=\"sen_en\">");
+                        if (beg == -1) break;
+                        web = web.Substring(beg);
+                        //ShowMsg(web);
+                        beg = web.IndexOf("</div>");
+                        if (beg == -1) break;
+                        tmp = web.Substring(0, beg);
+                        bool inhtml = false;
+                        foreach (var  x in tmp)
+                            if (x == '<') inhtml = true;
+                            else if (x == '>') inhtml = false;
+                            else if (!inhtml)
+                            {
+                                if (x == '[') str += '(';
+                                else if (x == '\n') str += ' ';
+                                else if (x == ']') str += ')';
+                                else str += x;
+                            }
+                        str += "\n";
+                        beg = web.IndexOf("<div class=\"sen_cn\">");
+                        if (beg == -1) break;
+                        web = web.Substring(beg);
+                        //ShowMsg(web);
+                        beg = web.IndexOf("</div>");
+                        if (beg == -1) break;
+                        tmp = web.Substring(0, beg);
+                        inhtml = false;
+                        var cn = "";
+                        foreach (var  x in tmp)
+                        {
+                            if (x == '<') inhtml = true;
+                            else if (x == '>') inhtml = false;
+                            else if (!inhtml)
+                            {
+                                if (x == '[') cn += '(';
+                                else if (x == '\n') cn += ' ';
+                                else if (x == ']') cn += ')';
+                                //else if (x == '“')str += L"「";
+                                //else if (x == '”')str += L"」";
+                                else cn += x;
+                            }
+                        }
+                        str += Voc.s2t(cn);
+                        str += "\n";
+                    }
+                    str=str.Replace("“", "「");
+                    str = str.Replace("”", "」");
+                    str = str.Replace("&nbsp;", " ");
+                    str = str.Replace("&lt;", "<");
+                    str = str.Replace("&gt;", ">");
+                    str = str.Replace("&amp;", "&");
+                    str = str.Replace("&quot;", "\"");
+                    str = str.Replace("&apos;", "'");
+
+
+                    Device.BeginInvokeOnMainThread(() => {
+                        var sentst=new StackLayout { Orientation = StackOrientation.Horizontal };
+                        sentst.Orientation = StackOrientation.Vertical;
+                        sentst.Margin = new Thickness(10, 0, 0, 0);
+                        var stre=str.Split('\n');
+                        for (int i = 0; i+1 < stre.Length; i += 2){
+                            var t1 = stre[i];
+                            var t2 = stre[i + 1];
+                            if (t1 == "" || t2 == "") continue;
+                            var stre2 = t1.Split(' ');
+                            var stp = new StackLayout { Orientation = StackOrientation.Horizontal };
+                            foreach (var t3 in stre2) {
+                                if (t3 == "") continue;
+                                var tx = new Label {
+                                    FontSize = 18,
+                                    Margin =new Thickness(5,15,0,0),
+                                    HorizontalTextAlignment = TextAlignment.Center,
+                                    VerticalTextAlignment = TextAlignment.Center,
+                                    Text = t3
+                                };
+                                var tgr = new TapGestureRecognizer();
+                                tgr.Tapped += Sent_TappedAsync;
+                                tx.GestureRecognizers.Add(tgr);
+                                stp.Children.Add(tx);
+                            }
+                            sentst.Children.Add(stp);
+                            stp = new StackLayout { Orientation = StackOrientation.Horizontal };
+                            stp.Children.Add(new Label
+                            {
+                                FontSize = 16,
+                                Margin = new Thickness(10, 0, 0, 0),
+                                HorizontalTextAlignment = TextAlignment.Center,
+                                VerticalTextAlignment = TextAlignment.Center,
+                                //TODO
+                                Text = t2
+                            });
+                            sentst.Children.Add(stp);
+                        }
+                        sent.Content = sentst;
+                    });
+                });
+
             }
             //Web Data Begin
             //Web Data End
@@ -190,13 +294,13 @@ namespace Cut
                 customCell.SetBinding(stcell.vocProperty, "voc");
                 customCell.SetBinding(stcell.expProperty, "exp");
                 VocList.ItemTemplate = customCell;
-                VocList.ItemSelected += VocList_ItemSelected;
+                VocList.ItemSelected += VocList_ItemSelectedAsync;
                 VocList.HasUnevenRows = true;
 
                 alias_list_Items = new ObservableCollection<wod>();
                 alias_list.ItemsSource = alias_list_Items;
                 alias_list.ItemTemplate = customCell;
-                alias_list.ItemSelected += Alias_list_ItemSelected; ;
+                alias_list.ItemSelected += Alias_list_ItemSelectedAsync; ;
                 alias_list.HasUnevenRows = true;
             }
             if (first)
@@ -273,7 +377,28 @@ namespace Cut
             first = false;
         }
 
-        private async void Alias_list_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+        private async void Sent_TappedAsync(object sender, EventArgs e)
+        {
+            var tmp = sender as Label;
+            if (tmp == null) return;
+            var s = tmp.Text;
+            if (s == null||s=="") return;
+            var x = s.IndexOfAny("qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM".ToCharArray());
+            if (x == -1) return;
+            s =s.Remove(0, x);
+            if (s == null || s == "") return;
+            x = s.LastIndexOfAny("qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM".ToCharArray());
+            if (x!=s.Length-1)
+                s =s.Remove(x + 1);
+            if (s == null || s == "") return;
+            await Navigation.PushAsync(new SingleVocPage(s));
+            
+            //ShowMsg(tmp->Text->Data());
+            //dynamic_cast<TextBox^>(note_view->Content)->Focus(Windows::UI::Xaml::FocusState::Pointer);
+
+        }
+
+        private async void Alias_list_ItemSelectedAsync(object sender, SelectedItemChangedEventArgs e)
         {
             var item = (e.SelectedItem as wod);
             alias_list.SelectedItem = null;
@@ -283,7 +408,7 @@ namespace Cut
             }
         }
 
-        private async void VocList_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+        private async void VocList_ItemSelectedAsync(object sender, SelectedItemChangedEventArgs e)
         {
             var item = (e.SelectedItem as wod);
             VocList.SelectedItem = null;
@@ -340,7 +465,7 @@ namespace Cut
                 }
         }
 
-        private async void GoRootPage(object sender)
+        private async void GoRootPageAsync(object sender)
         {
             var senderTextBlock = sender as Label;
             if (senderTextBlock == null) return;
@@ -361,7 +486,7 @@ namespace Cut
         }
         private void Tgr_Tapped(object sender, EventArgs e)
         {
-            GoRootPage(sender);
+            GoRootPageAsync(sender);
         }
         public SingleVocPage(string param)
         {
@@ -386,7 +511,7 @@ namespace Cut
                 Icon = "refresh.png",
                 Text = "重整",
                 Command = new Command(async () => {
-                    await Refresh();
+                    await RefreshAsync();
                 })
             });
             ToolbarItems.Add(new ToolbarItem
@@ -436,7 +561,8 @@ namespace Cut
             grid.Children.Add(note_view, 0, 5);
             grid.Children.Add(alias_list, 0, 6);
             grid.Children.Add(new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = pics }, 0, 7);
-            grid.Children.Add(VocList, 0, 8);
+            grid.Children.Add(new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = sent }, 0, 8);
+            grid.Children.Add(VocList, 0, 9);
             if (Voc.words.exists(param))
             {
                 if (_voc != null)
@@ -450,10 +576,10 @@ namespace Cut
             else
             {
                 _voc = param;
-                this.Appearing += async (s,e)=> { await Refresh(true); };
+                this.Appearing += async (s,e)=> { await RefreshAsync(true); };
             }
         }
-        async Task Refresh(bool first=false) {
+        async Task RefreshAsync(bool first=false) {
             var web = await Voc.GetAsync("http://cn.bing.com/dict/search?mkt=zh-cn&q=" + _voc);
             if (web == null || web=="") {
                 await DisplayAlert("錯誤", "網路錯誤", "了解");
@@ -521,12 +647,12 @@ namespace Cut
                 var be = web.IndexOf("<span class=\"pos web\">");
                 if (be == -1 || be + 22 >= web.Length) break;
                 web = web.Substring(be + 22);
-                var ed = web.IndexOf("</span><span class=\"def\"><span>");
-                if (ed == -1 || ed + 31 >= web.Length) break;
+                var ed = web.IndexOf("</span><span class=\"def\"><");
+                if (ed == -1 || ed + 25 >= web.Length) break;
                 disc += "[" + web.Substring(0, ed) + "]";
-                web = web.Substring(ed + 31);
+                web = web.Substring(ed + 25);
                 if (ed == -1) break;
-                ed = web.IndexOf("</span></span>");
+                ed = web.IndexOf("</span></");
                 string tmp = web.Substring(0, ed), str = "";
                 bool inhtml = false;
                 foreach (var x in tmp)

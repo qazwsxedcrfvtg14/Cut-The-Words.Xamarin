@@ -31,8 +31,7 @@ namespace Cut.Droid
             }
             else
             {
-                var app = Resolver.Resolve<IXFormsApp>() as IXFormsApp<XFormsApplicationDroid>;
-                if (app != null) app.AppContext = this;
+                if (Resolver.Resolve<IXFormsApp>() is IXFormsApp<XFormsApplicationDroid> app) app.AppContext = this;
             }
             global::Xamarin.Forms.Forms.Init(this, bundle);
             Xamarin.Forms.Forms.ViewInitialized += (sender, e) =>

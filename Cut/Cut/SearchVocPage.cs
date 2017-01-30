@@ -32,7 +32,7 @@ namespace Cut
             customCell.SetBinding(stcell.vocProperty, "voc");
             customCell.SetBinding(stcell.expProperty, "exp");
             VocList.ItemTemplate = customCell;
-            VocList.ItemSelected += Lis_ItemSelected;
+            VocList.ItemSelected += Lis_ItemSelectedAsync;
             VocList.HasUnevenRows = true;
             Device.StartTimer(new TimeSpan(1000000), () => {
                 if (this == null)
@@ -45,7 +45,7 @@ namespace Cut
                 target = q;
                 Task.Run(() =>
                 {
-                    var ve = Voc.match(q + "*");
+                    var ve = Voc.Match(q + "*");
                     Device.BeginInvokeOnMainThread(() =>
                     {
                         if (target != input_voc.Text||q!=target) return;
@@ -66,7 +66,7 @@ namespace Cut
                 await Navigation.PushAsync(new SingleVocPage(input_voc.Text));
             };
             VocList_Items.Clear();
-            foreach (var voc in Voc.match(input_voc.Text + "*"))
+            foreach (var voc in Voc.Match(input_voc.Text + "*"))
                 VocList_Items.Add(new wod(voc, Voc.GetExpSimple(Voc.words.val(voc))));
             VocList.ItemAppearing += (sender, e) =>{
                 if (islading || VocList_Items.Count == 0)
@@ -85,7 +85,7 @@ namespace Cut
             };
         }
 
-        private async void Lis_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+        private async void Lis_ItemSelectedAsync(object sender, SelectedItemChangedEventArgs e)
         {
             var item = (e.SelectedItem as wod);
             if (item != null)
@@ -102,7 +102,7 @@ namespace Cut
             var q = input_voc.Text;
             Task.Run(() =>
             {
-                var ve=Voc.match(input_voc.Text + "*", cnt,st);
+                var ve=Voc.Match(input_voc.Text + "*", cnt,st);
                 Device.BeginInvokeOnMainThread(() => {
                     if (q != input_voc.Text) return;
                     foreach (var voc in ve)
