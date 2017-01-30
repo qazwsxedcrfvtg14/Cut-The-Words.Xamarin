@@ -189,13 +189,15 @@ namespace Cut
                     }
                     str=str.Replace("“", "「");
                     str = str.Replace("”", "」");
+                    str = Voc.html_decode(str);
+                    /*
                     str = str.Replace("&nbsp;", " ");
                     str = str.Replace("&lt;", "<");
                     str = str.Replace("&gt;", ">");
                     str = str.Replace("&amp;", "&");
                     str = str.Replace("&quot;", "\"");
                     str = str.Replace("&apos;", "'");
-
+                    */
 
                     Device.BeginInvokeOnMainThread(() => {
                         var sentst=new StackLayout { Orientation = StackOrientation.Horizontal };
@@ -631,7 +633,8 @@ namespace Cut
                 disc += "[" + web.Substring(0, ed) + "]";
                 web = web.Substring(ed + 31);
                 if (ed == -1) break;
-                ed = web.IndexOf("</span></span>");
+                ed = web.IndexOf("</span></");
+                if (ed == -1) break;
                 string tmp = web.Substring(0, ed), str = "";
                 bool inhtml = false;
                 foreach (var x in tmp)
@@ -653,6 +656,7 @@ namespace Cut
                 web = web.Substring(ed + 25);
                 if (ed == -1) break;
                 ed = web.IndexOf("</span></");
+                if (ed == -1) break;
                 string tmp = web.Substring(0, ed), str = "";
                 bool inhtml = false;
                 foreach (var x in tmp)
@@ -678,6 +682,8 @@ namespace Cut
                 await DisplayAlert("錯誤", "查無此字", "了解");
                 return;
             }
+            nt = Voc.html_decode(nt);
+            disc = Voc.html_decode(disc);
             disc = Voc.s2t(disc2);
             Voc.words.add(_voc, disc);
             if (nt != "")
