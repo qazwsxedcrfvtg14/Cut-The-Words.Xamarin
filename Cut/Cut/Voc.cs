@@ -185,6 +185,12 @@ namespace Cut
         }
         public static List<string> Match_rot(string match, string beg = "")
         {
+            bool noteng = false;
+            if (match.Length != 0 && match[0] == '^')
+            {
+                noteng = true;
+                match = match.Substring(1);
+            }
             string reg_string = "";
             for (int i = 0; i < match.Length; i++)
             {
@@ -192,36 +198,54 @@ namespace Cut
                     reg_string += ".*";
                 else if (match[i] == '?')
                     reg_string += ".";
-                else
+                else if (match[i] >= 0 && match[i] <= 128)
                     reg_string += match[i];
+                else
+                {
+                    noteng = true;
+                    reg_string += match[i];
+                }
             }
             Regex reg = new Regex("^"+reg_string, RegexOptions.IgnoreCase);
+            Regex reg2 = new Regex("^.*" + reg_string + ".*", RegexOptions.IgnoreCase);
             List<string> ve = new List<string>();
             int cnt = 0;
             foreach (var x in prefix.data)
             {
-                var tmp = reg.Matches(x.Key);
-                if (tmp.Count != 0)
+                if (reg.IsMatch(x.Key))
                 {
                     ve.Add(x.Key + "-");
                     if (++cnt == 25) break;
                 }
+                else if (noteng && reg2.IsMatch(x.Value))
+                {
+                        ve.Add(x.Key + "-");
+                        if (++cnt == 25) break;
+                }
             }
             foreach (var x in root.data)
             {
-                var tmp = reg.Matches(x.Key);
-                if (tmp.Count != 0)
+                if (reg.IsMatch(x.Key))
                 {
                     ve.Add("-"+x.Key + "-");
+                    if (++cnt == 50) break;
+                }
+                else if (noteng && reg2.IsMatch(x.Value))
+                {
+                    ve.Add("-" + x.Key + "-");
                     if (++cnt == 50) break;
                 }
             }
             foreach (var x in suffix.data)
             {
-                var tmp = reg.Matches(x.Key);
-                if (tmp.Count != 0)
+                if (reg.IsMatch(x.Key))
                 {
                     ve.Add("-"+x.Key);
+                    if (++cnt == 75) break;
+                }
+                else if (noteng && reg2.IsMatch(x.Value))
+                {
+                    ve.Add("-" + x.Key);
                     if (++cnt == 75) break;
                 }
             }
