@@ -214,7 +214,7 @@ namespace Cut
                 //var major = version.Major;
 
                 //ShowMsg("版本號:ver " + IntToStr(version.Major) + "." + IntToStr(version.Minor) + "." + IntToStr(version.Build) + "." + IntToStr(version.Revision) );
-                await DisplayAlert("版本號", "ver 1.2.39", "了解");
+                await DisplayAlert("版本號", "ver 1.2.41", "了解");
             }
             else if (str == "測驗選項")
             {

@@ -471,7 +471,11 @@ namespace Cut
             var str=s.Substring(pos + 1).Split(' ');
             List<int> ve=new List<int>();
             foreach (var i in str)
-                ve.Add(Convert.ToInt32(i));
+            {
+                int x = 0;
+                int.TryParse(i, out x);
+                ve.Add(x);
+            }
             s = s.Substring(0, pos);
             if (s.Length > 1 && s[0] == '=' && words.exists(s.Substring(1).Trim()))
                 return Tuple.Create(GetExpSimple(words.val(s.Substring(1).Trim())), ve);

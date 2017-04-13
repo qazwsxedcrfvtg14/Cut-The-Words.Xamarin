@@ -31,7 +31,8 @@ namespace Cut
             Title = "部首查詢";
             input_voc = new SearchBar()
             {
-                Placeholder = "請輸入欲查詢之部首，亦可用?或*代表任意或單個字母"
+                Placeholder = "請輸入欲查詢之部首，亦可用?或*代表任意或單個字母",
+                HeightRequest = 50
             };
             VocList = new ListView();
             VocList_Items = new ObservableCollection<wod>();

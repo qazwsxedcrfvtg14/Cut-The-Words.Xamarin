@@ -22,7 +22,8 @@ namespace Cut
         {
             Title = "單字查詢";
             input_voc = new SearchBar {
-                FontSize=18
+                //FontSize=18,
+                HeightRequest = 50
             };
             input_voc.Placeholder = "請輸入中文或英文，亦可用?或*代表任意或單個字母";
             VocList = new ListView();
