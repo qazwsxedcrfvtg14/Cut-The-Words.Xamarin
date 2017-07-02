@@ -76,7 +76,7 @@ namespace Cut
         Node Merge(Node a, Node b) {
             if (a == null) return b;
             if (b == null) return a;
-            if ((rand++) % (a.Count + b.Count) < a.Count)
+            if ((rand++) % (a.Count + b.Count) < b.Count)
             {
                 a.push();
                 a.r = Merge(a.r, b);
